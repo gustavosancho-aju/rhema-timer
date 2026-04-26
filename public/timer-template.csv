@@ -1,0 +1,6 @@
+title,presenter,duration,type,color,autoAdvance
+Abertura,Rev. Carlos,00:10:00,countdown,green,false
+Louvor,,00:20:00,countdown,blue,true
+Palavra,Pastor João,00:40:00,countdown,red,false
+Ofertas,,00:05:00,countdown,yellow,true
+Avisos,,00:10:00,countdown,white,false

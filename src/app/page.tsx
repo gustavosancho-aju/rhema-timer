@@ -1,65 +1,173 @@
-import Image from "next/image";
+"use client";
+
+import { useMemo, useState } from "react";
+import { useRecorder } from "@/hooks/use-recorder";
+import { TopBar } from "@/components/command-center/top-bar";
+import { LeftRail } from "@/components/command-center/left-rail";
+import { CenterTranscript } from "@/components/command-center/center-transcript";
+import { RightAgent } from "@/components/command-center/right-agent";
+import { VersiculosSugeridos } from "@/components/versiculos-sugeridos";
+
+const STOP_WORDS = new Set([
+  "a","o","as","os","e","é","de","do","da","dos","das","em","um","uma","uns","umas",
+  "para","por","com","sem","que","qual","quais","se","ao","à","às","aos","mas",
+  "ou","não","sim","já","mais","menos","muito","muita","muitos","muitas","este",
+  "esta","estes","estas","esse","essa","esses","essas","isso","aquilo","ele","ela",
+  "eles","elas","eu","tu","nós","vós","você","vocês","seu","sua","seus","suas",
+  "meu","minha","nosso","nossa","foi","ser","são","está","estão","tem","tinha",
+  "ter","quando","onde","como","porque","então","assim","até","sobre",
+]);
+
+function extractKeywords(texto: string, limit = 5): string[] {
+  if (!texto) return [];
+  const counts = new Map<string, number>();
+  for (const raw of texto.toLowerCase().split(/[^a-záàâãéèêíïóôõöúçñ]+/i)) {
+    const w = raw.trim();
+    if (!w || w.length < 4 || STOP_WORDS.has(w)) continue;
+    counts.set(w, (counts.get(w) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([w]) => w);
+}
 
 export default function Home() {
+  const rec = useRecorder();
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [generatedAt, setGeneratedAt] = useState<string | null>(null);
+
+  const transcricao = useMemo(
+    () => (rec.textoFinal + " " + rec.textoInterim).trim(),
+    [rec.textoFinal, rec.textoInterim],
+  );
+
+  const keywords = useMemo(() => extractKeywords(transcricao), [transcricao]);
+
+  function handleToggle() {
+    if (rec.gravando) {
+      rec.parar();
+    } else {
+      setStartedAt(Date.now());
+      rec.iniciar();
+    }
+  }
+
+  async function handleGerar() {
+    await rec.gerarLegendas();
+    const d = new Date();
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    setGeneratedAt(`geradas ${pad(d.getHours())}:${pad(d.getMinutes())}`);
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "var(--bg-0)",
+        color: "var(--fg-1)",
+        fontFamily: "var(--font-sans)",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <div className="rh-atmo" />
+      <div className="rh-atmo-noise" />
+
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <TopBar active="live" extraLinks={[{ label: "Timer", href: "/timer" }]} />
+
+        <div
+          className="grid gap-5"
+          style={{
+            gridTemplateColumns: "260px 1fr 420px",
+            padding: "20px 28px 28px",
+            height: "calc(100vh - 72px)",
+            minHeight: 700,
+          }}
+        >
+          <LeftRail
+            gravando={rec.gravando}
+            decorridoMs={rec.decorrido}
+            palavras={rec.palavras}
+            titulo={rec.gravando || transcricao ? "Sessão atual" : "Nenhuma sessão ativa"}
+            subtitulo={
+              rec.gravando || transcricao
+                ? { texto: "Palavra ao vivo", autor: "pt-BR · Web Speech" }
+                : undefined
+            }
+          />
+
+          <CenterTranscript
+            gravando={rec.gravando}
+            decorridoMs={rec.decorrido}
+            textoFinal={rec.textoFinal}
+            textoInterim={rec.textoInterim}
+            startedAt={startedAt}
+            onToggle={handleToggle}
+            keywords={keywords}
+          />
+
+          <RightAgent
+            legendas={rec.legendas}
+            gerando={rec.gerando}
+            onGerar={handleGerar}
+            disabled={rec.gravando || transcricao.length < 40}
+            transcricaoLen={transcricao.length}
+            palavras={rec.palavras}
+            geradoEm={rec.legendas ? generatedAt ?? undefined : undefined}
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {rec.erro && (
+          <div
+            className="rh-card"
+            style={{
+              position: "fixed",
+              bottom: 20,
+              left: "50%",
+              transform: "translateX(-50%)",
+              padding: "12px 20px",
+              maxWidth: 560,
+              background: "rgba(239,68,68,0.12)",
+              border: "1px solid rgba(239,68,68,0.35)",
+              color: "#fca5a5",
+              fontSize: 13,
+              zIndex: 10,
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            {rec.erro}
+          </div>
+        )}
+
+        {rec.suportado === false && (
+          <div
+            className="rh-card"
+            style={{
+              position: "fixed",
+              bottom: 20,
+              left: "50%",
+              transform: "translateX(-50%)",
+              padding: "12px 20px",
+              maxWidth: 560,
+              background: "rgba(245,158,11,0.08)",
+              border: "1px solid rgba(245,158,11,0.3)",
+              color: "#fcd34d",
+              fontSize: 13,
+              zIndex: 10,
+            }}
           >
-            Documentation
-          </a>
-        </div>
-      </main>
+            Seu navegador não suporta a Web Speech API. Use <strong>Chrome</strong> ou{" "}
+            <strong>Edge</strong> no desktop.
+          </div>
+        )}
+
+        {(rec.gravando || transcricao) && (
+          <div style={{ padding: "0 28px 28px", position: "relative" }}>
+            <VersiculosSugeridos transcricao={transcricao} gravando={rec.gravando} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

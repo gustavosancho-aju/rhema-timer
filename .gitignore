@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# timer db (local SQLite)
+timer.db
+timer.db-journal
+timer.db-wal
+timer.db-shm
+drizzle/

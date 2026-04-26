@@ -1,0 +1,42 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createTimer, listTimers } from "@/lib/timer/timers";
+import { getRoom } from "@/lib/timer/rooms";
+import { broadcastRoomSync } from "@/lib/timer/ws-handler";
+
+export const runtime = "nodejs";
+
+type Ctx = { params: Promise<{ id: string }> };
+
+export async function GET(_req: NextRequest, ctx: Ctx) {
+  const { id } = await ctx.params;
+  const room = getRoom(id);
+  if (!room)
+    return NextResponse.json({ error: "Sala não encontrada" }, { status: 404 });
+  return NextResponse.json({ timers: listTimers(id) });
+}
+
+export async function POST(req: NextRequest, ctx: Ctx) {
+  try {
+    const { id } = await ctx.params;
+    const room = getRoom(id);
+    if (!room)
+      return NextResponse.json(
+        { error: "Sala não encontrada" },
+        { status: 404 },
+      );
+    const body = (await req.json()) as {
+      title?: string;
+      presenter?: string;
+      type?: "countdown" | "countup" | "time_of_day";
+      duration?: number;
+      color?: string;
+      autoAdvance?: boolean;
+    };
+    const timer = createTimer({ roomId: id, ...body });
+    broadcastRoomSync(id);
+    return NextResponse.json({ timer }, { status: 201 });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+}
