@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { CURADOR_SYSTEM_PROMPT } from "@/features/rhema/lib/prompts/curador";
+import { montarBlocoFewShot } from "@/features/rhema/lib/prompts/few-shot";
+import { getLegendasEscolhidas } from "@/features/rhema/lib/gravacoes";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -41,11 +43,15 @@ export async function POST(req: NextRequest) {
 
     const userPrompt = `Transcrição da palavra da pastora (pode conter ruído/erros da transcrição automática — interprete o sentido):\n\n"""\n${transcricao}\n"""\n\nGere as 2 legendas conforme instruído. Responda apenas com o JSON.`;
 
+    // Few-shot: o curador aprende com as legendas já escolhidas pelo líder.
+    const exemplos = await getLegendasEscolhidas(6);
+    const systemPrompt = CURADOR_SYSTEM_PROMPT + montarBlocoFewShot(exemplos);
+
     const client = new Anthropic({ apiKey });
     const message = await client.messages.create({
       model: MODEL,
       max_tokens: 2000,
-      system: CURADOR_SYSTEM_PROMPT,
+      system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     });
 
