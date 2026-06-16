@@ -2,14 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { VersiculosSugeridos } from "@/features/rhema/components/versiculos-sugeridos";
-
-type Direcionamento = "emotiva" | "reflexiva" | "biblica";
-
-type Legenda = {
-  texto: string;
-  direcionamento: Direcionamento;
-  justificativa: string;
-};
+import { HistoricoGravacoes } from "@/features/rhema/components/historico-gravacoes";
+import { useHistoricoGravacoes } from "@/features/rhema/hooks/use-historico-gravacoes";
+import type {
+  Direcionamento,
+  Legenda,
+} from "@/features/rhema/lib/historico-gravacoes";
 
 type RespostaApi = {
   legendas?: Legenda[];
@@ -94,6 +92,10 @@ export default function Recorder() {
   const recRef = useRef<SpeechRecognitionLike | null>(null);
   const transcritoRef = useRef<HTMLDivElement | null>(null);
   const gravandoRef = useRef(false);
+
+  const { historico, salvar: salvarGravacao, limparHistorico } =
+    useHistoricoGravacoes();
+  const [salvo, setSalvo] = useState(false);
 
   useEffect(() => {
     // Detecção de capacidade do browser (SpeechRecognition) só existe no
@@ -180,6 +182,7 @@ export default function Recorder() {
     setErro(null);
     setGerando(true);
     setLegendas(null);
+    setSalvo(false);
     try {
       const r = await fetch("/api/legendas", {
         method: "POST",
@@ -203,6 +206,17 @@ export default function Recorder() {
     navigator.clipboard.writeText(texto).catch(() => {});
   };
 
+  const salvarNoHistorico = useCallback(() => {
+    if (!legendas || legendas.length === 0) return;
+    salvarGravacao(legendas, decorrido);
+    setSalvo(true);
+  }, [legendas, decorrido, salvarGravacao]);
+
+  const restaurar = useCallback((legendasSalvas: Legenda[]) => {
+    setLegendas(legendasSalvas);
+    setErro(null);
+  }, []);
+
   const limpar = () => {
     setTextoFinal("");
     setTextoInterim("");
@@ -210,6 +224,7 @@ export default function Recorder() {
     setErro(null);
     setDecorrido(0);
     setInicio(null);
+    setSalvo(false);
   };
 
   const formatarTempo = (ms: number) => {
@@ -269,6 +284,14 @@ export default function Recorder() {
           className="rh-btn rh-btn-primary"
         >
           {gerando ? "Gerando legendas…" : "✦ Gerar legendas"}
+        </button>
+
+        <button
+          onClick={salvarNoHistorico}
+          disabled={!legendas || legendas.length === 0 || salvo}
+          className="rh-btn rh-btn-ghost"
+        >
+          {salvo ? "✓ Salvo" : "Salvar no histórico"}
         </button>
 
         <button
@@ -436,6 +459,13 @@ export default function Recorder() {
       <VersiculosSugeridos
         transcricao={(textoFinal + " " + textoInterim).trim()}
         gravando={gravando}
+      />
+
+      {/* Histórico das últimas gravações */}
+      <HistoricoGravacoes
+        historico={historico}
+        onRestaurar={(g) => restaurar(g.legendas)}
+        onLimpar={limparHistorico}
       />
     </div>
   );
