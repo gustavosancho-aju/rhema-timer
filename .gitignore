@@ -4,6 +4,9 @@
 /node_modules
 node_modules/
 /.pnp
+
+# Material de negócio interno/confidencial (não versionar — fica só local)
+docs/business/
 .pnp.*
 .yarn/*
 !.yarn/patches
