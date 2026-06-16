@@ -3,7 +3,7 @@
 **Tipo:** Brownfield (sistema em produção)
 **Autor:** Morgan (PM)
 **Data:** 2026-06-15
-**Status:** Draft — aguardando GO para implementação
+**Status:** ✅ Concluído — todas as stories (08.0–08.5) implementadas e no ar
 
 ---
 

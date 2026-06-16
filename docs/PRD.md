@@ -184,4 +184,37 @@ Mutação via API routes → broadcast no canal `room:{id}`; sem processo persis
 4. Ampliar cobertura de testes (lógica do rhema, `rooms`/`messages`).
 
 > Detalhes técnicos da migração: `docs/deploy/vercel-supabase.md`.
-4. Depois: integrar agente curador e tela de revisão.
+
+---
+
+## 13. Epic 08 — Legendas por Culto + Aprendizado do Curador
+
+**Status:** ✅ Concluído (2026-06-15) · Spec: `docs/epics/epic-08-legendas-por-culto.md`
+
+Evolui o módulo Rhema de "gera legendas isoladas" para um fluxo de produção de
+conteúdo por culto que **aprende com as escolhas do líder**.
+
+### 13.1 Contexto
+No domingo há dois cultos — **Sozo** e **Culto da Família** — que viram **um post
+único** no Instagram. O Culto de Quarta é avulso.
+
+### 13.2 Entregas
+
+| Story | O que faz |
+|-------|-----------|
+| 08.0 | Rotas de IA (`/api/legendas`, `/api/detectar-versiculo`) migradas do SDK local para a **API Anthropic** (`ANTHROPIC_API_KEY`) — funcionam no Vercel |
+| 08.1 | Tabela **`gravacoes`** no Supabase (`culto_tipo`, `legendas` jsonb, `escolhida_idx`, `duracao_ms`) + API (POST/GET/PATCH) |
+| 08.2 | **Seletor de culto** (Sozo / Culto da Família / Culto de Quarta) ao salvar |
+| 08.3 | Botão **"Escolher esta"** marca a legenda definitiva de cada gravação |
+| 08.4 | **"Gerar post do domingo"**: combina a última legenda escolhida do Sozo + a do Culto da Família; a IA **sintetiza uma legenda final** |
+| 08.5 | **Aprendizado few-shot**: legendas escolhidas viram exemplos de estilo injetados no prompt do curador e do combinador |
+
+### 13.3 Modelos de IA (por custo/latência)
+- **Detector de versículos:** `claude-haiku-4-5` (alta frequência, tempo real)
+- **Legendas e combinador:** `claude-sonnet-4-6`
+
+### 13.4 Persistência
+O histórico migrou de `localStorage` para **Supabase Postgres** (uma fonte de
+verdade). O painel "Últimas gravações" mostra rótulo de culto e legenda escolhida.
+
+> Próximo passo: integrar o agente curador à tela de revisão e ampliar testes.
