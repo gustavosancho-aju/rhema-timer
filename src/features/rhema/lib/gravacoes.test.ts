@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CULTO_LABELS, CULTO_TIPOS, isCultoTipo } from "./gravacoes";
+import { CULTO_LABELS, CULTO_TIPOS, isCultoTipo } from "./gravacoes-types";
 
 describe("isCultoTipo", () => {
   it("aceita os três tipos válidos", () => {

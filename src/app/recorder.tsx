@@ -3,11 +3,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { VersiculosSugeridos } from "@/features/rhema/components/versiculos-sugeridos";
 import { HistoricoGravacoes } from "@/features/rhema/components/historico-gravacoes";
-import { useHistoricoGravacoes } from "@/features/rhema/hooks/use-historico-gravacoes";
+import {
+  useGravacoes,
+  type GravacaoCliente,
+} from "@/features/rhema/hooks/use-gravacoes";
+import {
+  CULTO_LABELS,
+  CULTO_TIPOS,
+} from "@/features/rhema/lib/gravacoes-types";
 import type {
+  CultoTipo,
   Direcionamento,
-  Legenda,
-} from "@/features/rhema/lib/historico-gravacoes";
+  LegendaJson as Legenda,
+} from "@/features/rhema/lib/gravacoes-types";
 
 type RespostaApi = {
   legendas?: Legenda[];
@@ -93,9 +101,10 @@ export default function Recorder() {
   const transcritoRef = useRef<HTMLDivElement | null>(null);
   const gravandoRef = useRef(false);
 
-  const { historico, salvar: salvarGravacao, limparHistorico } =
-    useHistoricoGravacoes();
+  const { historico, salvando, salvar: salvarGravacao } = useGravacoes();
   const [salvo, setSalvo] = useState(false);
+  const [cultoTipo, setCultoTipo] = useState<CultoTipo | "">("");
+  const [escolhidaIdx, setEscolhidaIdx] = useState<number | null>(null);
 
   useEffect(() => {
     // Detecção de capacidade do browser (SpeechRecognition) só existe no
@@ -183,6 +192,7 @@ export default function Recorder() {
     setGerando(true);
     setLegendas(null);
     setSalvo(false);
+    setEscolhidaIdx(null);
     try {
       const r = await fetch("/api/legendas", {
         method: "POST",
@@ -206,14 +216,23 @@ export default function Recorder() {
     navigator.clipboard.writeText(texto).catch(() => {});
   };
 
-  const salvarNoHistorico = useCallback(() => {
+  const salvarNoHistorico = useCallback(async () => {
     if (!legendas || legendas.length === 0) return;
-    salvarGravacao(legendas, decorrido);
-    setSalvo(true);
-  }, [legendas, decorrido, salvarGravacao]);
+    if (!cultoTipo || escolhidaIdx == null) return;
+    const ok = await salvarGravacao({
+      cultoTipo,
+      legendas,
+      escolhidaIdx,
+      duracaoMs: decorrido,
+    });
+    if (ok) setSalvo(true);
+  }, [legendas, cultoTipo, escolhidaIdx, decorrido, salvarGravacao]);
 
-  const restaurar = useCallback((legendasSalvas: Legenda[]) => {
-    setLegendas(legendasSalvas);
+  const restaurar = useCallback((g: GravacaoCliente) => {
+    setLegendas(g.legendas);
+    setCultoTipo(g.cultoTipo);
+    setEscolhidaIdx(g.escolhidaIdx);
+    setSalvo(false);
     setErro(null);
   }, []);
 
@@ -225,6 +244,7 @@ export default function Recorder() {
     setDecorrido(0);
     setInicio(null);
     setSalvo(false);
+    setEscolhidaIdx(null);
   };
 
   const formatarTempo = (ms: number) => {
@@ -286,12 +306,49 @@ export default function Recorder() {
           {gerando ? "Gerando legendas…" : "✦ Gerar legendas"}
         </button>
 
+        {/* Seletor de culto */}
+        <div className="flex items-center gap-1.5">
+          {CULTO_TIPOS.map((tipo) => {
+            const ativo = cultoTipo === tipo;
+            return (
+              <button
+                key={tipo}
+                onClick={() => setCultoTipo(ativo ? "" : tipo)}
+                disabled={gravando}
+                className="text-xs rounded-lg px-2.5 py-1.5 transition"
+                style={{
+                  background: ativo ? "var(--luxo-aqua)" : "var(--bg-2)",
+                  border: "1px solid var(--border-default)",
+                  color: ativo ? "var(--luxo-void)" : "var(--fg-3)",
+                  fontWeight: ativo ? 600 : 400,
+                }}
+              >
+                {CULTO_LABELS[tipo]}
+              </button>
+            );
+          })}
+        </div>
+
         <button
           onClick={salvarNoHistorico}
-          disabled={!legendas || legendas.length === 0 || salvo}
+          disabled={
+            !legendas ||
+            legendas.length === 0 ||
+            !cultoTipo ||
+            escolhidaIdx == null ||
+            salvo ||
+            salvando
+          }
           className="rh-btn rh-btn-ghost"
+          title={
+            !cultoTipo
+              ? "Selecione o culto"
+              : escolhidaIdx == null
+                ? "Escolha a legenda definitiva"
+                : undefined
+          }
         >
-          {salvo ? "✓ Salvo" : "Salvar no histórico"}
+          {salvo ? "✓ Salvo" : salvando ? "Salvando…" : "Salvar no histórico"}
         </button>
 
         <button
@@ -403,12 +460,18 @@ export default function Recorder() {
             )}
             {legendas?.map((l, i) => {
               const style = direcionamentoStyles[l.direcionamento];
+              const escolhida = escolhidaIdx === i;
               return (
                 <article
                   key={i}
                   className="rh-card flex flex-col gap-3 p-4"
+                  style={
+                    escolhida
+                      ? { boxShadow: "0 0 0 2px var(--luxo-aqua)" }
+                      : undefined
+                  }
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <span
                       className="text-xs font-semibold px-2.5 py-1 rounded-full"
                       style={{
@@ -419,17 +482,33 @@ export default function Recorder() {
                     >
                       {style.label}
                     </span>
-                    <button
-                      onClick={() => copiar(l.texto)}
-                      className="text-xs rounded-lg px-3 py-1.5 transition"
-                      style={{
-                        background: "var(--bg-2)",
-                        border: "1px solid var(--border-default)",
-                        color: "var(--fg-2)",
-                      }}
-                    >
-                      Copiar
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setEscolhidaIdx(escolhida ? null : i)}
+                        className="text-xs rounded-lg px-3 py-1.5 transition"
+                        style={{
+                          background: escolhida
+                            ? "var(--luxo-aqua)"
+                            : "var(--bg-2)",
+                          border: "1px solid var(--border-default)",
+                          color: escolhida ? "var(--luxo-void)" : "var(--fg-2)",
+                          fontWeight: escolhida ? 600 : 400,
+                        }}
+                      >
+                        {escolhida ? "✓ Escolhida" : "Escolher esta"}
+                      </button>
+                      <button
+                        onClick={() => copiar(l.texto)}
+                        className="text-xs rounded-lg px-3 py-1.5 transition"
+                        style={{
+                          background: "var(--bg-2)",
+                          border: "1px solid var(--border-default)",
+                          color: "var(--fg-2)",
+                        }}
+                      >
+                        Copiar
+                      </button>
+                    </div>
                   </div>
                   <p
                     className="whitespace-pre-wrap leading-relaxed"
@@ -462,11 +541,7 @@ export default function Recorder() {
       />
 
       {/* Histórico das últimas gravações */}
-      <HistoricoGravacoes
-        historico={historico}
-        onRestaurar={(g) => restaurar(g.legendas)}
-        onLimpar={limparHistorico}
-      />
+      <HistoricoGravacoes historico={historico} onRestaurar={restaurar} />
     </div>
   );
 }
