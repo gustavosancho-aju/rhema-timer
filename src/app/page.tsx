@@ -8,7 +8,6 @@ import { LeftRail } from "@/features/rhema/components/command-center/left-rail";
 import { CenterTranscript } from "@/features/rhema/components/command-center/center-transcript";
 import { RightAgent } from "@/features/rhema/components/command-center/right-agent";
 import { VersiculosSugeridos } from "@/features/rhema/components/versiculos-sugeridos";
-import { HistoricoGravacoes } from "@/features/rhema/components/historico-gravacoes";
 import type {
   CultoTipo,
   GravacaoCliente,
@@ -119,6 +118,14 @@ export default function Home() {
     }
   }
 
+  const sozoPronto = historico.some(
+    (g) => g.cultoTipo === "sozo" && g.escolhidaIdx != null,
+  );
+  const familiaPronto = historico.some(
+    (g) => g.cultoTipo === "familia" && g.escolhidaIdx != null,
+  );
+  const postPronto = sozoPronto && familiaPronto;
+
   return (
     <div
       style={{
@@ -155,6 +162,8 @@ export default function Home() {
                 ? { texto: "Palavra ao vivo", autor: "pt-BR · Web Speech" }
                 : undefined
             }
+            historico={historico}
+            onRestaurar={restaurar}
           />
 
           <CenterTranscript
@@ -239,16 +248,51 @@ export default function Home() {
           className="flex flex-col gap-6"
         >
           {/* Post do domingo: combina a última escolhida do Sozo + do Culto da Família */}
-          <section className="flex flex-col gap-3">
+          <section className="rh-card flex flex-col gap-3" style={{ padding: 20 }}>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="rh-eyebrow">Post do domingo</h2>
+              <div className="flex flex-col gap-1">
+                <h2 className="rh-eyebrow">Post do domingo</h2>
+                <span style={{ fontSize: 12, color: "var(--fg-3)" }}>
+                  Une a legenda escolhida do Sozo + do Culto da Família numa
+                  legenda final.
+                </span>
+              </div>
               <button
                 onClick={gerarPostDomingo}
-                disabled={gerandoPost}
+                disabled={gerandoPost || !postPronto}
                 className="rh-btn rh-btn-primary"
+                title={
+                  !postPronto
+                    ? "Salve uma legenda escolhida de cada culto primeiro"
+                    : undefined
+                }
               >
                 {gerandoPost ? "Combinando…" : "✦ Gerar post do domingo"}
               </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {[
+                { ok: sozoPronto, label: "Sozo" },
+                { ok: familiaPronto, label: "Culto da Família" },
+              ].map((c) => (
+                <span
+                  key={c.label}
+                  style={{
+                    fontSize: 11,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "4px 10px",
+                    borderRadius: 9999,
+                    background: c.ok ? "rgba(143,216,220,0.12)" : "var(--bg-2)",
+                    border: `1px solid ${c.ok ? "rgba(143,216,220,0.4)" : "var(--border-default)"}`,
+                    color: c.ok ? "var(--luxo-aqua)" : "var(--fg-3)",
+                  }}
+                >
+                  {c.ok ? "✓" : "○"} {c.label}
+                </span>
+              ))}
             </div>
             {erroPost && (
               <div
@@ -309,8 +353,6 @@ export default function Home() {
               </article>
             )}
           </section>
-
-          <HistoricoGravacoes historico={historico} onRestaurar={restaurar} />
         </div>
       </div>
     </div>

@@ -2,6 +2,20 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { Badge, Dot, Eyebrow, Serif } from "@/shared/components/ui/primitives";
+import { CULTO_LABELS } from "@/features/rhema/lib/gravacoes-types";
+import type { GravacaoCliente } from "@/features/rhema/lib/gravacoes-types";
+
+const CULTO_COR: Record<string, string> = {
+  sozo: "#8FD8DC",
+  familia: "#F59E0B",
+  quarta: "#A855F7",
+};
+
+function formatData(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 function formatDur(ms: number): string {
   const totalSec = Math.floor(ms / 1000);
@@ -13,14 +27,6 @@ function formatDur(ms: number): string {
   return `${pad(m)}:${pad(s)}`;
 }
 
-interface HistoryItem {
-  date: string;
-  title: string;
-  duration: string;
-  words: number;
-  status: "posted" | "draft";
-}
-
 export function LeftRail({
   gravando,
   decorridoMs,
@@ -28,13 +34,15 @@ export function LeftRail({
   titulo = "Sessão sem título",
   subtitulo,
   historico = [],
+  onRestaurar,
 }: {
   gravando: boolean;
   decorridoMs: number;
   palavras: number;
   titulo?: string;
   subtitulo?: { texto: string; autor?: string };
-  historico?: HistoryItem[];
+  historico?: GravacaoCliente[];
+  onRestaurar?: (g: GravacaoCliente) => void;
 }) {
   return (
     <div className="flex flex-col gap-4" style={{ minHeight: 0 }}>
@@ -86,8 +94,12 @@ export function LeftRail({
 
       <Card noPad style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
         <div className="flex items-center justify-between" style={{ padding: "14px 16px 10px" }}>
-          <Eyebrow>Histórico</Eyebrow>
-          <span style={{ fontSize: 11, color: "var(--fg-3)" }}>últimos 14 dias</span>
+          <Eyebrow>Últimas gravações</Eyebrow>
+          {historico.length > 0 && (
+            <span style={{ fontSize: 11, color: "var(--fg-3)" }}>
+              {historico.length}
+            </span>
+          )}
         </div>
         <div className="thin-scroll" style={{ overflowY: "auto", flex: 1 }}>
           {historico.length === 0 ? (
@@ -97,12 +109,18 @@ export function LeftRail({
                 fontSize: 12,
                 color: "var(--fg-4)",
                 borderTop: "1px solid var(--border-subtle)",
+                lineHeight: 1.6,
               }}
             >
-              Nenhuma sessão publicada ainda. Grave e gere sua primeira legenda.
+              Nenhuma gravação salva ainda.
+              <br />
+              Gere legendas, escolha a sua favorita, marque o culto e clique em{" "}
+              <strong style={{ color: "var(--fg-2)" }}>Salvar no histórico</strong>.
             </div>
           ) : (
-            historico.map((h, i) => <HistoryRow key={i} {...h} />)
+            historico.map((g) => (
+              <GravacaoRow key={g.id} g={g} onRestaurar={onRestaurar} />
+            ))
           )}
         </div>
       </Card>
@@ -110,59 +128,101 @@ export function LeftRail({
   );
 }
 
-function HistoryRow({ date, title, duration, words, status }: HistoryItem) {
+function GravacaoRow({
+  g,
+  onRestaurar,
+}: {
+  g: GravacaoCliente;
+  onRestaurar?: (g: GravacaoCliente) => void;
+}) {
+  const escolhida =
+    g.escolhidaIdx != null ? g.legendas[g.escolhidaIdx] : undefined;
+  const previa = (escolhida?.texto ?? g.legendas[0]?.texto ?? "").replace(
+    /\n+/g,
+    " ",
+  );
+  const cor = CULTO_COR[g.cultoTipo] ?? "var(--fg-3)";
+
   return (
-    <div
-      className="transition"
+    <button
+      type="button"
+      onClick={() => onRestaurar?.(g)}
+      className="rh-history-row transition"
       style={{
+        display: "block",
+        width: "100%",
+        textAlign: "left",
         padding: "12px 16px",
         borderTop: "1px solid var(--border-subtle)",
-        cursor: "pointer",
+        background: "transparent",
+        cursor: onRestaurar ? "pointer" : "default",
       }}
     >
-      <div className="flex items-center gap-2.5" style={{ marginBottom: 6 }}>
+      <div className="flex items-center gap-2" style={{ marginBottom: 6 }}>
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 700,
+            color: cor,
+            background: `${cor}1f`,
+            border: `1px solid ${cor}40`,
+            borderRadius: 9999,
+            padding: "2px 8px",
+          }}
+        >
+          {CULTO_LABELS[g.cultoTipo]}
+        </span>
         <span
           style={{
             fontSize: 10,
             fontFamily: "var(--font-mono)",
             color: "var(--fg-3)",
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
           }}
         >
-          {date}
+          {formatData(g.createdAt)}
         </span>
-        <Dot size={3} color="var(--fg-4)" />
-        <span
-          style={{
-            fontSize: 10,
-            fontWeight: 600,
-            color: status === "posted" ? "var(--luxo-glow)" : "var(--luxo-gold)",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}
-        >
-          {status === "posted" ? "publicado" : "rascunho"}
-        </span>
+        {escolhida && (
+          <span
+            style={{
+              marginLeft: "auto",
+              fontSize: 10,
+              fontWeight: 600,
+              color: "var(--luxo-glow)",
+            }}
+          >
+            ✓ escolhida
+          </span>
+        )}
       </div>
       <div
         style={{
-          fontSize: 13,
-          color: "var(--fg-1)",
-          marginBottom: 4,
-          letterSpacing: "-0.005em",
+          fontSize: 12,
+          color: "var(--fg-2)",
+          lineHeight: 1.5,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
         }}
       >
-        {title}
+        {previa || "(sem legendas)"}
       </div>
       <div
         className="flex gap-2.5"
-        style={{ fontSize: 11, color: "var(--fg-3)", fontFamily: "var(--font-mono)" }}
+        style={{
+          fontSize: 10,
+          color: "var(--fg-4)",
+          fontFamily: "var(--font-mono)",
+          marginTop: 6,
+        }}
       >
-        <span>{duration}</span>
-        <span>{words.toLocaleString("pt-BR").replace(",", " ")} palavras</span>
+        <span>{formatDur(g.duracaoMs)}</span>
+        <Dot size={3} color="var(--fg-4)" />
+        <span>
+          {g.legendas.length} legenda{g.legendas.length === 1 ? "" : "s"}
+        </span>
       </div>
-    </div>
+    </button>
   );
 }
 
