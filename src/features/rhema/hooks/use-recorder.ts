@@ -64,6 +64,7 @@ export interface UseRecorderReturn {
   parar: () => void;
   gerarLegendas: () => Promise<void>;
   limpar: () => void;
+  setLegendas: (l: Legenda[] | null) => void;
 }
 
 export function useRecorder(): UseRecorderReturn {
@@ -240,5 +241,6 @@ export function useRecorder(): UseRecorderReturn {
     parar,
     gerarLegendas,
     limpar,
+    setLegendas,
   };
 }

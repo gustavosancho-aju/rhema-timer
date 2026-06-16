@@ -3,6 +3,11 @@
 import { useState } from "react";
 import type { Legenda } from "@/features/rhema/hooks/use-recorder";
 import { Badge, Dot, Eyebrow, Ico } from "@/shared/components/ui/primitives";
+import {
+  CULTO_LABELS,
+  CULTO_TIPOS,
+  type CultoTipo,
+} from "@/features/rhema/lib/gravacoes-types";
 
 type AgentStepStatus = "done" | "active" | "pending";
 
@@ -29,6 +34,13 @@ export function RightAgent({
   transcricaoLen,
   palavras,
   geradoEm,
+  escolhidaIdx,
+  onEscolher,
+  cultoTipo,
+  onCulto,
+  onSalvar,
+  salvo,
+  salvando,
 }: {
   legendas: Legenda[] | null;
   gerando: boolean;
@@ -37,6 +49,13 @@ export function RightAgent({
   transcricaoLen: number;
   palavras: number;
   geradoEm?: string;
+  escolhidaIdx: number | null;
+  onEscolher: (i: number | null) => void;
+  cultoTipo: CultoTipo | "";
+  onCulto: (t: CultoTipo | "") => void;
+  onSalvar: () => void;
+  salvo: boolean;
+  salvando: boolean;
 }) {
   const steps: AgentStep[] = buildSteps({ gerando, legendas, transcricaoLen, palavras });
 
@@ -164,8 +183,25 @@ export function RightAgent({
           )}
 
           {legendas?.map((caption, i) => (
-            <CaptionCard key={i} caption={caption} index={i} />
+            <CaptionCard
+              key={i}
+              caption={caption}
+              index={i}
+              escolhida={escolhidaIdx === i}
+              onEscolher={() => onEscolher(escolhidaIdx === i ? null : i)}
+            />
           ))}
+
+          {legendas && (
+            <SalvarBlock
+              cultoTipo={cultoTipo}
+              onCulto={onCulto}
+              onSalvar={onSalvar}
+              salvo={salvo}
+              salvando={salvando}
+              podeSalvar={escolhidaIdx != null && !!cultoTipo}
+            />
+          )}
 
           {legendas && (
             <button
@@ -334,7 +370,17 @@ function TypingDots() {
   );
 }
 
-function CaptionCard({ caption, index }: { caption: Legenda; index: number }) {
+function CaptionCard({
+  caption,
+  index,
+  escolhida,
+  onEscolher,
+}: {
+  caption: Legenda;
+  index: number;
+  escolhida: boolean;
+  onEscolher: () => void;
+}) {
   const [copied, setCopied] = useState(false);
   const style = DIRECTION_STYLES[caption.direcionamento];
   const IconEl = style.icon === "heart" ? Ico.heart : Ico.brain;
@@ -355,8 +401,12 @@ function CaptionCard({ caption, index }: { caption: Legenda; index: number }) {
         padding: 16,
         borderRadius: 16,
         background: "rgba(4,32,40,0.65)",
-        border: "1px solid var(--border-subtle)",
-        boxShadow: "inset 0 1px 0 rgba(176,240,240,0.05)",
+        border: escolhida
+          ? "1px solid var(--luxo-aqua)"
+          : "1px solid var(--border-subtle)",
+        boxShadow: escolhida
+          ? "0 0 0 1px var(--luxo-aqua), inset 0 1px 0 rgba(176,240,240,0.05)"
+          : "inset 0 1px 0 rgba(176,240,240,0.05)",
         transition: "all 240ms var(--ease-out-expo)",
         position: "relative",
         overflow: "hidden",
@@ -407,38 +457,70 @@ function CaptionCard({ caption, index }: { caption: Legenda; index: number }) {
             opção {index + 1}
           </Badge>
         </div>
-        <button
-          type="button"
-          onClick={copy}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            height: 28,
-            padding: "0 10px",
-            borderRadius: 9999,
-            background: copied ? "rgba(176,240,240,0.15)" : "transparent",
-            border: copied
-              ? "1px solid rgba(176,240,240,0.35)"
-              : "1px solid var(--border-subtle)",
-            color: copied ? "var(--luxo-glow)" : "var(--fg-2)",
-            fontSize: 11,
-            fontWeight: 500,
-            cursor: "pointer",
-            fontFamily: "var(--font-sans)",
-            transition: "all 240ms",
-          }}
-        >
-          {copied ? (
-            <>
-              <Ico.check /> copiado
-            </>
-          ) : (
-            <>
-              <Ico.copy /> copiar
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onEscolher}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              height: 28,
+              padding: "0 12px",
+              borderRadius: 9999,
+              background: escolhida ? "var(--luxo-aqua)" : "transparent",
+              border: escolhida
+                ? "1px solid var(--luxo-aqua)"
+                : "1px solid var(--border-subtle)",
+              color: escolhida ? "var(--luxo-void)" : "var(--fg-2)",
+              fontSize: 11,
+              fontWeight: escolhida ? 700 : 500,
+              cursor: "pointer",
+              fontFamily: "var(--font-sans)",
+              transition: "all 240ms",
+            }}
+          >
+            {escolhida ? (
+              <>
+                <Ico.check /> escolhida
+              </>
+            ) : (
+              "escolher esta"
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={copy}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              height: 28,
+              padding: "0 10px",
+              borderRadius: 9999,
+              background: copied ? "rgba(176,240,240,0.15)" : "transparent",
+              border: copied
+                ? "1px solid rgba(176,240,240,0.35)"
+                : "1px solid var(--border-subtle)",
+              color: copied ? "var(--luxo-glow)" : "var(--fg-2)",
+              fontSize: 11,
+              fontWeight: 500,
+              cursor: "pointer",
+              fontFamily: "var(--font-sans)",
+              transition: "all 240ms",
+            }}
+          >
+            {copied ? (
+              <>
+                <Ico.check /> copiado
+              </>
+            ) : (
+              <>
+                <Ico.copy /> copiar
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       <div
@@ -486,6 +568,88 @@ function CaptionCard({ caption, index }: { caption: Legenda; index: number }) {
         <Dot size={3} color="var(--fg-4)" />
         <span>hashtags: {hashtags}</span>
       </div>
+    </div>
+  );
+}
+
+function SalvarBlock({
+  cultoTipo,
+  onCulto,
+  onSalvar,
+  salvo,
+  salvando,
+  podeSalvar,
+}: {
+  cultoTipo: CultoTipo | "";
+  onCulto: (t: CultoTipo | "") => void;
+  onSalvar: () => void;
+  salvo: boolean;
+  salvando: boolean;
+  podeSalvar: boolean;
+}) {
+  return (
+    <div
+      style={{
+        padding: 14,
+        borderRadius: 14,
+        background: "rgba(4,32,40,0.5)",
+        border: "1px solid var(--border-default)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 11,
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "0.12em",
+          color: "var(--fg-2)",
+        }}
+      >
+        Tipo de culto
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {CULTO_TIPOS.map((tipo) => {
+          const ativo = cultoTipo === tipo;
+          return (
+            <button
+              key={tipo}
+              type="button"
+              onClick={() => onCulto(ativo ? "" : tipo)}
+              style={{
+                fontSize: 11,
+                borderRadius: 9999,
+                padding: "5px 12px",
+                background: ativo ? "var(--luxo-aqua)" : "transparent",
+                border: `1px solid ${ativo ? "var(--luxo-aqua)" : "var(--border-subtle)"}`,
+                color: ativo ? "var(--luxo-void)" : "var(--fg-2)",
+                fontWeight: ativo ? 700 : 500,
+                cursor: "pointer",
+                fontFamily: "var(--font-sans)",
+              }}
+            >
+              {CULTO_LABELS[tipo]}
+            </button>
+          );
+        })}
+      </div>
+      <button
+        type="button"
+        onClick={onSalvar}
+        disabled={!podeSalvar || salvo || salvando}
+        className="rh-btn rh-btn-ghost"
+        style={{ width: "100%", borderRadius: 10 }}
+      >
+        {salvo
+          ? "✓ Salvo no histórico"
+          : salvando
+            ? "Salvando…"
+            : !podeSalvar
+              ? "Escolha a legenda e o culto"
+              : "Salvar no histórico"}
+      </button>
     </div>
   );
 }
