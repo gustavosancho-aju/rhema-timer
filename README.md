@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Rhema AI — Transcrição ao vivo + Timer de palco
 
-## Getting Started
+Plataforma web para transmissão de cultos ao vivo. Dois módulos integrados:
 
-First, run the development server:
+- **Rhema (Transcrição):** transcreve a palavra ao vivo no navegador e um agente de
+  IA gera legendas prontas para Instagram (com direcionamento editorial).
+- **Timer de palco:** salas multi-tela sincronizadas em tempo real
+  (controller, operator, moderator, viewer, agenda) para cronometrar apresentações.
+
+🟢 **Em produção:** Vercel + Supabase.
+
+## Stack
+
+| Camada | Tecnologia |
+|--------|-----------|
+| Frontend | Next.js 16 · React 19 · TypeScript · Tailwind v4 |
+| Estado | Zustand |
+| Banco | Supabase Postgres (Drizzle ORM) |
+| Tempo real | Supabase Realtime |
+| Transcrição | Web Speech API (navegador) |
+| IA (legendas) | Anthropic (Claude) |
+| Hospedagem | Vercel |
+| Testes | Vitest |
+
+## Como rodar localmente
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.local.example .env.local   # preencha as chaves (Supabase + Anthropic)
+npm run db:push                     # cria as tabelas no Supabase Postgres
+npm run dev                         # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Variáveis de ambiente
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variável | Para quê |
+|----------|----------|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Chave pública (browser/Realtime) |
+| `DATABASE_URL` | Connection string do Postgres (pooler 6543) |
+| `ANTHROPIC_API_KEY` | Geração de legendas (módulo Rhema) |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Qualidade
 
-## Learn More
+```bash
+npm run check   # lint + typecheck + testes (rode antes de commitar)
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Estrutura
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├── app/         # rotas Next.js (camada fina)
+├── features/    # timer/ e rhema/ — cada domínio autocontido
+└── shared/      # ui e tipos reutilizados
+docs/            # PRD, arquitetura, deploy, design
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Detalhes da convenção em [`src/README.md`](src/README.md).
+Arquitetura e deploy em [`docs/`](docs/) (PRD em [`docs/PRD.md`](docs/PRD.md)).
 
-## Deploy on Vercel
+## Deploy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Push na `main` → deploy automático no Vercel. Migrações de schema: `npm run db:push`.
+Plano completo da infraestrutura em [`docs/deploy/vercel-supabase.md`](docs/deploy/vercel-supabase.md).

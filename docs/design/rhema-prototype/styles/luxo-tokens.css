@@ -1,0 +1,145 @@
+/* =========================================================
+   CMND — Design Tokens (replaces Site Luxo)
+   Deep teal-black · Aqua luminous highlights · Azul petróleo
+   Variable names kept as --luxo-* for backward compat with
+   existing components — values are re-aliased to CMND palette.
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300;1,9..144,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ---------- Color: base (deep teal-black) ---------- */
+  --luxo-void:       #001010;
+  --luxo-carvao:     #042028;
+  --luxo-suave:      #0B3440;
+
+  /* ---------- Color: CMND teal / aqua ---------- */
+  --luxo-teal:       #104050;   /* primary action */
+  --luxo-teal-mid:   #2E6A7A;   /* hover / accent */
+  --luxo-aqua:       #8FD8DC;   /* foreground accent */
+  --luxo-glow:       #B0F0F0;   /* luminous aqua — live/active moments (was neon green) */
+  --luxo-green:      #2E6A7A;   /* aliased to mid-teal (was Shopify green) */
+  --luxo-white:      #F0FAFA;   /* soft aqua-tinted white */
+
+  /* ---------- Color: secondary (azul petróleo) replaces renaissance ---------- */
+  --luxo-petroleo:   #0E3A4F;
+  --luxo-petroleo-hi:#1B5670;
+  --luxo-purple:     #0A2A3A;   /* aliased — deep atmospheric */
+  --luxo-gold:       #8FD8DC;   /* aliased to aqua — "the Word" now glows aqua */
+
+  /* ---------- Semantic foreground ---------- */
+  --fg-1:            var(--luxo-white);
+  --fg-2:            rgba(240, 250, 250, 0.70);
+  --fg-3:            rgba(240, 250, 250, 0.45);
+  --fg-4:            rgba(240, 250, 250, 0.20);
+
+  /* ---------- Semantic background ---------- */
+  --bg-0:            var(--luxo-void);
+  --bg-1:            var(--luxo-carvao);
+  --bg-2:            var(--luxo-suave);
+  --bg-glass:        rgba(4, 32, 40, 0.60);
+
+  /* ---------- Border ---------- */
+  --border-subtle:   rgba(176, 240, 240, 0.06);
+  --border-default:  rgba(176, 240, 240, 0.14);
+  --border-strong:   rgba(176, 240, 240, 0.24);
+  --border-accent:   rgba(143, 216, 220, 0.55);
+
+  /* ---------- Typography ---------- */
+  --font-sans:       'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-serif:      'Fraunces', 'Playfair Display', Georgia, serif;
+  --font-mono:       'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+  --weight-black:    800;
+
+  --text-eyebrow:    0.6875rem;
+  --text-caption:    0.8125rem;
+  --text-body-sm:    0.9375rem;
+  --text-body:       1rem;
+  --text-body-lg:    1.125rem;
+  --text-h5:         1.375rem;
+  --text-h4:         1.75rem;
+  --text-h3:         2.25rem;
+  --text-h2:         3.25rem;
+  --text-h1:         4.5rem;
+  --text-display:    7rem;
+
+  --leading-tight:   1.05;
+  --leading-snug:    1.2;
+  --leading-normal:  1.55;
+  --leading-loose:   1.7;
+
+  --tracking-display: -0.03em;
+  --tracking-heading: -0.02em;
+  --tracking-body:   -0.005em;
+  --tracking-eyebrow: 0.18em;
+
+  /* ---------- Spacing ---------- */
+  --space-1:   0.25rem;
+  --space-2:   0.5rem;
+  --space-3:   0.75rem;
+  --space-4:   1rem;
+  --space-5:   1.5rem;
+  --space-6:   2rem;
+  --space-7:   3rem;
+  --space-8:   4rem;
+  --space-9:   6rem;
+  --space-10:  8rem;
+  --space-11: 12rem;
+
+  /* ---------- Radii ---------- */
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --radius-xl:  24px;
+  --radius-2xl: 32px;
+  --radius-pill: 9999px;
+
+  /* ---------- Shadows & glow ---------- */
+  --shadow-hairline-inner:  inset 0 1px 0 rgba(176, 240, 240, 0.05);
+  --shadow-card:            0 1px 0 rgba(176, 240, 240, 0.05) inset, 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-modal:           0 40px 80px rgba(0, 0, 0, 0.7), 0 8px 24px rgba(0, 0, 0, 0.4);
+  --glow-green:             0 0 24px rgba(16, 64, 80, 0.6);
+  --glow-ai:                0 0 32px rgba(143, 216, 220, 0.45);
+  --glow-gold:              0 0 20px rgba(143, 216, 220, 0.3);
+  --glow-purple:            0 0 60px rgba(10, 42, 58, 0.6);
+
+  /* ---------- Motion ---------- */
+  --ease-out-expo:   cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+  --dur-micro:  150ms;
+  --dur-ui:     240ms;
+  --dur-section: 700ms;
+
+  --blur-glass: blur(24px) saturate(1.2);
+}
+
+/* ==========================================================
+   Semantic element defaults (kept .luxo-surface class name)
+   ========================================================== */
+
+.luxo-surface {
+  background: var(--bg-0);
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--leading-normal);
+  letter-spacing: var(--tracking-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.luxo-surface h1, .luxo-h1 { font-family: var(--font-sans); font-size: var(--text-h1); font-weight: var(--weight-black); line-height: var(--leading-tight); letter-spacing: var(--tracking-display); color: var(--fg-1); margin: 0; }
+.luxo-surface h2, .luxo-h2 { font-size: var(--text-h2); font-weight: var(--weight-bold); line-height: var(--leading-tight); letter-spacing: var(--tracking-heading); color: var(--fg-1); margin: 0; }
+.luxo-surface h3, .luxo-h3 { font-size: var(--text-h3); font-weight: var(--weight-semibold); line-height: var(--leading-snug); letter-spacing: var(--tracking-heading); color: var(--fg-1); margin: 0; }
+.luxo-surface h4, .luxo-h4 { font-size: var(--text-h4); font-weight: var(--weight-semibold); line-height: var(--leading-snug); color: var(--fg-1); margin: 0; }
+.luxo-surface h5, .luxo-h5 { font-size: var(--text-h5); font-weight: var(--weight-semibold); line-height: var(--leading-snug); color: var(--fg-1); margin: 0; }
+.luxo-surface p, .luxo-body { font-size: var(--text-body); line-height: var(--leading-normal); color: var(--fg-2); margin: 0; }
+.luxo-display { font-size: var(--text-display); font-weight: var(--weight-black); line-height: 0.95; letter-spacing: var(--tracking-display); color: var(--fg-1); }
+.luxo-serif { font-family: var(--font-serif); font-style: italic; font-weight: var(--weight-regular); color: var(--luxo-gold); }
+.luxo-eyebrow { font-size: var(--text-eyebrow); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: var(--tracking-eyebrow); color: var(--fg-3); }
+.luxo-mono { font-family: var(--font-mono); font-size: var(--text-caption); color: var(--fg-2); }
+.luxo-caption { font-size: var(--text-caption); color: var(--fg-3); }

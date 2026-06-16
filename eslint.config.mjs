@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Documentação e protótipos de design (não fazem parte do código do app).
+    "docs/**",
   ]),
 ]);
 
