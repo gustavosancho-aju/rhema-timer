@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@anthropic-ai/claude-agent-sdk";
+import Anthropic from "@anthropic-ai/sdk";
 import { DETECTOR_BIBLICO_SYSTEM_PROMPT } from "@/features/rhema/lib/prompts/detector-biblico";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
+
+// Este endpoint roda com alta frequência (a cada ~20s durante o culto).
+// RECOMENDAÇÃO: troque por "claude-haiku-4-5" — mais rápido e barato para esta
+// classificação em tempo real (decisão de custo/latência sua).
+const MODEL = "claude-opus-4-8";
 
 /**
  * POST /api/detectar-versiculo
@@ -47,41 +52,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { detectou: false, erro: "ANTHROPIC_API_KEY não configurada no servidor." },
+        { status: 500 }
+      );
+    }
+
     const userPrompt = `Janela de transcrição (últimos ~20s de fala):\n\n"""\n${transcricao.trim()}\n"""\n\nAnalise e responda apenas com o JSON conforme instruído.`;
 
-    // Chama Claude via SDK (usa a assinatura Max local). Model Haiku seria ideal,
-    // mas o SDK usa o modelo configurado no CLI — por padrão Sonnet. O custo no MVP
-    // é zero (assinatura). Na migração para API paga, trocar para Haiku.
-    const iterator = query({
-      prompt: userPrompt,
-      options: {
-        systemPrompt: {
-          type: "preset",
-          preset: "claude_code",
-          append: DETECTOR_BIBLICO_SYSTEM_PROMPT,
-        },
-        allowedTools: [],
-        settingSources: [],
-      },
+    const client = new Anthropic({ apiKey });
+    const message = await client.messages.create({
+      model: MODEL,
+      max_tokens: 1000,
+      system: DETECTOR_BIBLICO_SYSTEM_PROMPT,
+      messages: [{ role: "user", content: userPrompt }],
     });
 
-    let textoResultado = "";
-    for await (const message of iterator) {
-      if (message.type === "result") {
-        if (message.subtype === "success") {
-          textoResultado = message.result;
-        } else {
-          return NextResponse.json(
-            { detectou: false, erro: `Falha na execução: ${message.subtype}` },
-            { status: 502 }
-          );
-        }
-      }
-    }
+    const textoResultado = message.content
+      .filter((b): b is Anthropic.TextBlock => b.type === "text")
+      .map((b) => b.text)
+      .join("");
 
     if (!textoResultado) {
       return NextResponse.json(
-        { detectou: false, erro: "SDK não retornou resultado." },
+        { detectou: false, erro: "Modelo não retornou conteúdo." },
         { status: 502 }
       );
     }
