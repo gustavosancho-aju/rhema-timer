@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { getDb } from "./db";
+import { getDb } from "@/shared/lib/db";
 import { roomState, type RoomState } from "./schema";
 
 export interface EphemeralState {

@@ -17,7 +17,10 @@ const migrationUrl = (process.env.DATABASE_URL ?? "")
   .replace("?pgbouncer=true", "");
 
 export default {
-  schema: "./src/features/timer/lib/schema.ts",
+  schema: [
+    "./src/features/timer/lib/schema.ts",
+    "./src/features/rhema/lib/gravacoes-schema.ts",
+  ],
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {

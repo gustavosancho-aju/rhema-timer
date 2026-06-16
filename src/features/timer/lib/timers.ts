@@ -1,6 +1,6 @@
 import { asc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { getDb } from "./db";
+import { getDb } from "@/shared/lib/db";
 import { timers, type NewTimer, type Timer } from "./schema";
 
 export type TimerType = "countdown" | "countup" | "time_of_day";
