@@ -1,13 +1,25 @@
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import path from "node:path";
+// Conexão Drizzle com o Postgres do Supabase (server-side).
+// Inicialização preguiçosa: só conecta quando `getDb()` é chamado, evitando
+// abrir conexão durante o build.
+import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import * as schema from "./schema";
 
-const dbPath = path.join(process.cwd(), "timer.db");
+let db: PostgresJsDatabase<typeof schema> | null = null;
 
-const sqlite = new Database(dbPath);
-sqlite.pragma("journal_mode = WAL");
-sqlite.pragma("foreign_keys = ON");
+export function getDb(): PostgresJsDatabase<typeof schema> {
+  if (db) return db;
 
-export const db = drizzle(sqlite, { schema });
-export { sqlite };
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error(
+      "DATABASE_URL não definida. Configure a connection string do Postgres " +
+        "do Supabase (.env.local / Vercel).",
+    );
+  }
+
+  // prepare:false é recomendado para o pooler (porta 6543) do Supabase.
+  const sql = postgres(url, { prepare: false });
+  db = drizzle(sql, { schema });
+  return db;
+}

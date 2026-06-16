@@ -17,28 +17,30 @@ function formatRelative(ts: number): string {
 }
 
 export async function GET() {
-  const rooms = listRooms();
+  const rooms = await listRooms();
   const now = Date.now();
 
-  const enriched = rooms.map((r) => {
-    const timers = listTimers(r.id);
-    const active = timers.find(
-      (t) => t.status === "running" || t.status === "paused",
-    );
-    const status: "live" | "idle" | "draft" = active
-      ? "live"
-      : timers.length === 0
-        ? "draft"
-        : "idle";
-    return {
-      id: r.id,
-      name: r.name,
-      lastActivity: formatRelative(r.updatedAt.getTime()),
-      timersCount: timers.length,
-      status,
-      activeTimerId: active?.id ?? null,
-    };
-  });
+  const enriched = await Promise.all(
+    rooms.map(async (r) => {
+      const timers = await listTimers(r.id);
+      const active = timers.find(
+        (t) => t.status === "running" || t.status === "paused",
+      );
+      const status: "live" | "idle" | "draft" = active
+        ? "live"
+        : timers.length === 0
+          ? "draft"
+          : "idle";
+      return {
+        id: r.id,
+        name: r.name,
+        lastActivity: formatRelative(r.updatedAt.getTime()),
+        timersCount: timers.length,
+        status,
+        activeTimerId: active?.id ?? null,
+      };
+    }),
+  );
 
   const totals = {
     roomsTotal: enriched.length,

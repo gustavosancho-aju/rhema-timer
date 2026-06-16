@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateTimer } from "@/features/timer/lib/timers";
-import { broadcastRoomSync } from "@/features/timer/lib/ws-handler";
+import { broadcastRoomState } from "@/features/timer/lib/realtime";
 
 export const runtime = "nodejs";
 
@@ -13,10 +13,10 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     if (!Array.isArray(body.ids)) {
       return NextResponse.json({ error: "ids array required" }, { status: 400 });
     }
-    body.ids.forEach((timerId, idx) => {
-      updateTimer(timerId, { order: idx });
-    });
-    broadcastRoomSync(id);
+    await Promise.all(
+      body.ids.map((timerId, idx) => updateTimer(timerId, { order: idx })),
+    );
+    await broadcastRoomState(id);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

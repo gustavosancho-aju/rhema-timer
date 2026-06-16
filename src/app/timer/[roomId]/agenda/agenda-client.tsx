@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useWsTimer } from "@/features/timer/hooks/use-ws-timer";
+import { useRealtimeTimer } from "@/features/timer/hooks/use-realtime-timer";
 import { useTimerTick } from "@/features/timer/hooks/use-timer";
 import { useTimerStore } from "@/features/timer/store/timer-store";
 import { formatTime } from "@/features/timer/lib/format-time";
@@ -16,7 +16,7 @@ export default function AgendaClient({
   roomId: string;
   roomName: string;
 }) {
-  useWsTimer(roomId, "agenda");
+  useRealtimeTimer(roomId, "agenda");
   const timers = useTimerStore((s) => s.timers);
   const activeTimerId = useTimerStore((s) => s.activeTimerId);
   const wsConnected = useTimerStore((s) => s.wsConnected);

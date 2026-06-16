@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useWsTimer } from "@/features/timer/hooks/use-ws-timer";
+import { useRealtimeTimer } from "@/features/timer/hooks/use-realtime-timer";
 import { useTimerTick } from "@/features/timer/hooks/use-timer";
 import { useTimerStore } from "@/features/timer/store/timer-store";
 import { playChime } from "@/features/timer/lib/chime";
@@ -14,7 +14,7 @@ export default function ViewerClient({
   roomId: string;
   roomName?: string;
 }) {
-  const { flashPulse } = useWsTimer(roomId, "viewer");
+  const { flashPulse } = useRealtimeTimer(roomId, "viewer");
   const timers = useTimerStore((s) => s.timers);
   const activeTimerId = useTimerStore((s) => s.activeTimerId);
   const blackout = useTimerStore((s) => s.blackout);

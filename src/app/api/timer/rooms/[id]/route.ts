@@ -7,7 +7,7 @@ type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
-  const room = getRoom(id);
+  const room = await getRoom(id);
   if (!room) {
     return NextResponse.json({ error: "Sala não encontrada" }, { status: 404 });
   }
@@ -24,7 +24,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
         { status: 400 },
       );
     }
-    const room = renameRoom(id, body.name);
+    const room = await renameRoom(id, body.name);
     if (!room) {
       return NextResponse.json(
         { error: "Sala não encontrada" },
@@ -40,7 +40,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 
 export async function DELETE(_req: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
-  const ok = deleteRoom(id);
+  const ok = await deleteRoom(id);
   if (!ok) {
     return NextResponse.json({ error: "Sala não encontrada" }, { status: 404 });
   }

@@ -3,8 +3,8 @@ import RoomsClient from "./rooms-client";
 
 export const dynamic = "force-dynamic";
 
-export default function TimerPage() {
-  const rooms = listRooms().map((r) => ({
+export default async function TimerPage() {
+  const rooms = (await listRooms()).map((r) => ({
     id: r.id,
     name: r.name,
     createdAt: r.createdAt,

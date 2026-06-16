@@ -10,7 +10,7 @@ export default async function ModeratorPage({
   params: Promise<{ roomId: string }>;
 }) {
   const { roomId } = await params;
-  const room = getRoom(roomId);
+  const room = await getRoom(roomId);
   if (!room) notFound();
   return <ModeratorClient roomId={room.id} roomName={room.name} />;
 }
