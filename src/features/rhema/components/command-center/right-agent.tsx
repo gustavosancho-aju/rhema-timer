@@ -382,6 +382,7 @@ function CaptionCard({
   onEscolher: () => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const [aberto, setAberto] = useState(false);
   const style = DIRECTION_STYLES[caption.direcionamento];
   const IconEl = style.icon === "heart" ? Ico.heart : Ico.brain;
 
@@ -460,6 +461,29 @@ function CaptionCard({
         <div className="flex items-center gap-2">
           <button
             type="button"
+            onClick={() => setAberto(true)}
+            title="Ler a legenda completa"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              height: 28,
+              padding: "0 12px",
+              borderRadius: 9999,
+              background: "transparent",
+              border: "1px solid var(--border-subtle)",
+              color: "var(--fg-2)",
+              fontSize: 11,
+              fontWeight: 500,
+              cursor: "pointer",
+              fontFamily: "var(--font-sans)",
+              transition: "all 240ms",
+            }}
+          >
+            ler
+          </button>
+          <button
+            type="button"
             onClick={onEscolher}
             style={{
               display: "inline-flex",
@@ -523,18 +547,50 @@ function CaptionCard({
         </div>
       </div>
 
-      <div
+      <button
+        type="button"
+        onClick={() => setAberto(true)}
+        title="Ler a legenda completa"
         style={{
+          display: "-webkit-box",
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+          textAlign: "left",
+          background: "transparent",
+          border: "none",
+          padding: 0,
+          width: "100%",
+          cursor: "pointer",
           fontSize: 13,
           lineHeight: 1.6,
           color: "var(--fg-1)",
           whiteSpace: "pre-wrap",
-          marginBottom: 12,
+          marginBottom: 6,
           letterSpacing: "-0.005em",
+          fontFamily: "var(--font-sans)",
         }}
       >
         {caption.texto}
-      </div>
+      </button>
+      <button
+        type="button"
+        onClick={() => setAberto(true)}
+        style={{
+          alignSelf: "flex-start",
+          background: "transparent",
+          border: "none",
+          padding: 0,
+          marginBottom: 12,
+          color: "var(--luxo-aqua)",
+          fontSize: 11,
+          fontWeight: 600,
+          cursor: "pointer",
+          fontFamily: "var(--font-sans)",
+        }}
+      >
+        ler completa →
+      </button>
 
       {caption.justificativa && (
         <div
@@ -567,6 +623,174 @@ function CaptionCard({
         <span>{words} palavras</span>
         <Dot size={3} color="var(--fg-4)" />
         <span>hashtags: {hashtags}</span>
+      </div>
+
+      {aberto && (
+        <LegendaModal
+          caption={caption}
+          index={index}
+          escolhida={escolhida}
+          onEscolher={onEscolher}
+          onClose={() => setAberto(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function LegendaModal({
+  caption,
+  index,
+  escolhida,
+  onEscolher,
+  onClose,
+}: {
+  caption: Legenda;
+  index: number;
+  escolhida: boolean;
+  onEscolher: () => void;
+  onClose: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  const style = DIRECTION_STYLES[caption.direcionamento];
+
+  function copy() {
+    navigator.clipboard?.writeText(caption.texto).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1400);
+  }
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 50,
+        background: "rgba(2,16,20,0.72)",
+        backdropFilter: "blur(4px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 24,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="thin-scroll"
+        style={{
+          width: "100%",
+          maxWidth: 640,
+          maxHeight: "82vh",
+          overflowY: "auto",
+          borderRadius: 20,
+          background: "var(--bg-1, #06222a)",
+          border: "1px solid var(--border-default)",
+          boxShadow: "0 24px 80px rgba(0,0,0,0.5)",
+          padding: 24,
+        }}
+      >
+        <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+          <div className="flex items-center gap-2">
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: style.color,
+                textTransform: "uppercase",
+                letterSpacing: "0.18em",
+              }}
+            >
+              {style.label}
+            </span>
+            <Badge variant="neutral" style={{ height: 20, fontSize: 10 }}>
+              opção {index + 1}
+            </Badge>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar"
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 9999,
+              background: "var(--bg-2)",
+              border: "1px solid var(--border-default)",
+              color: "var(--fg-2)",
+              fontSize: 16,
+              cursor: "pointer",
+              lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        <div
+          style={{
+            fontSize: 16,
+            lineHeight: 1.75,
+            color: "var(--fg-1)",
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          {caption.texto}
+        </div>
+
+        {caption.justificativa && (
+          <div
+            style={{
+              marginTop: 16,
+              paddingTop: 14,
+              borderTop: "1px solid var(--border-subtle)",
+              fontSize: 12,
+              fontStyle: "italic",
+              color: "var(--fg-3)",
+            }}
+          >
+            {caption.justificativa}
+          </div>
+        )}
+
+        <div
+          className="flex items-center gap-2"
+          style={{
+            marginTop: 20,
+            paddingTop: 16,
+            borderTop: "1px solid var(--border-subtle)",
+          }}
+        >
+          <button
+            type="button"
+            onClick={onEscolher}
+            className="rh-btn"
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              background: escolhida ? "var(--luxo-aqua)" : "var(--bg-2)",
+              border: `1px solid ${escolhida ? "var(--luxo-aqua)" : "var(--border-default)"}`,
+              color: escolhida ? "var(--luxo-void)" : "var(--fg-1)",
+              fontWeight: escolhida ? 700 : 500,
+            }}
+          >
+            {escolhida ? "✓ Escolhida" : "Escolher esta"}
+          </button>
+          <button
+            type="button"
+            onClick={copy}
+            className="rh-btn"
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              background: "var(--bg-2)",
+              border: "1px solid var(--border-default)",
+              color: copied ? "var(--luxo-glow)" : "var(--fg-1)",
+            }}
+          >
+            {copied ? "✓ Copiado" : "Copiar"}
+          </button>
+        </div>
       </div>
     </div>
   );
