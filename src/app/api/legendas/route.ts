@@ -50,10 +50,18 @@ export async function POST(req: NextRequest) {
     const client = new Anthropic({ apiKey });
     const message = await client.messages.create({
       model: MODEL,
-      max_tokens: 2000,
+      max_tokens: 3072,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     });
+
+    // Se a resposta foi cortada por limite de tokens, o JSON vem incompleto.
+    if (message.stop_reason === "max_tokens") {
+      return NextResponse.json(
+        { erro: "A resposta da IA veio longa demais e foi cortada. Tente gerar novamente." },
+        { status: 502 },
+      );
+    }
 
     const textoResultado = message.content
       .filter((b): b is Anthropic.TextBlock => b.type === "text")
@@ -80,10 +88,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const parsed = JSON.parse(jsonMatch[0]) as RespostaCurador;
+    let parsed: RespostaCurador;
+    try {
+      parsed = JSON.parse(jsonMatch[0]) as RespostaCurador;
+    } catch {
+      return NextResponse.json(
+        { erro: "A IA respondeu num formato inesperado. Tente gerar novamente." },
+        { status: 502 },
+      );
+    }
     return NextResponse.json(parsed);
   } catch (err) {
     const mensagem = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ erro: mensagem }, { status: 500 });
+    return NextResponse.json(
+      { erro: `Falha ao gerar legendas: ${mensagem}. Tente novamente.` },
+      { status: 500 },
+    );
   }
 }
