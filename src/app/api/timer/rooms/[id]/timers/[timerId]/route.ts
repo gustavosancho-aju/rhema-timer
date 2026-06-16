@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { deleteTimer, getTimer, updateTimer } from "@/features/timer/lib/timers";
-import { broadcastRoomSync } from "@/features/timer/lib/ws-handler";
+import { broadcastRoomState } from "@/features/timer/lib/realtime";
 
 export const runtime = "nodejs";
 
@@ -8,7 +8,7 @@ type Ctx = { params: Promise<{ id: string; timerId: string }> };
 
 export async function GET(_req: NextRequest, ctx: Ctx) {
   const { timerId } = await ctx.params;
-  const timer = getTimer(timerId);
+  const timer = await getTimer(timerId);
   if (!timer)
     return NextResponse.json(
       { error: "Timer não encontrado" },
@@ -43,13 +43,13 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       const n = Number(patch.scheduledStart);
       patch.scheduledStart = Number.isFinite(n) ? new Date(n) : null;
     }
-    const timer = updateTimer(timerId, patch);
+    const timer = await updateTimer(timerId, patch);
     if (!timer)
       return NextResponse.json(
         { error: "Timer não encontrado" },
         { status: 404 },
       );
-    broadcastRoomSync(timer.roomId);
+    await broadcastRoomState(timer.roomId);
     return NextResponse.json({ timer });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -59,12 +59,12 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 
 export async function DELETE(_req: NextRequest, ctx: Ctx) {
   const { id, timerId } = await ctx.params;
-  const ok = deleteTimer(timerId);
+  const ok = await deleteTimer(timerId);
   if (!ok)
     return NextResponse.json(
       { error: "Timer não encontrado" },
       { status: 404 },
     );
-  broadcastRoomSync(id);
+  await broadcastRoomState(id);
   return NextResponse.json({ ok: true });
 }

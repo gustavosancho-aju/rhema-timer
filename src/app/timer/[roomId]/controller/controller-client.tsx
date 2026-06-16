@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTimerStore } from "@/features/timer/store/timer-store";
-import { useWsTimer } from "@/features/timer/hooks/use-ws-timer";
+import { useRealtimeTimer } from "@/features/timer/hooks/use-realtime-timer";
 import { useTimerTick } from "@/features/timer/hooks/use-timer";
 import { RoleTopBar } from "@/features/rhema/components/command-center/role-top-bar";
 import TimerList from "./components/timer-list";
@@ -19,7 +19,7 @@ export default function ControllerClient({
   roomId: string;
   roomName: string;
 }) {
-  const { sendCommand } = useWsTimer(roomId, "controller");
+  const { sendCommand } = useRealtimeTimer(roomId, "controller");
   const timers = useTimerStore((s) => s.timers);
   const activeTimerId = useTimerStore((s) => s.activeTimerId);
   const connections = useTimerStore((s) => s.connectionCount);

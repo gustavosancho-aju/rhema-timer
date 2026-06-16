@@ -1,31 +1,29 @@
 import { asc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { db } from "./db";
+import { getDb } from "./db";
 import { timers, type NewTimer, type Timer } from "./schema";
 
 export type TimerType = "countdown" | "countup" | "time_of_day";
 export type TimerStatus = "idle" | "running" | "paused" | "finished";
 
-export function listTimers(roomId: string): Timer[] {
-  return db
+export async function listTimers(roomId: string): Promise<Timer[]> {
+  return getDb()
     .select()
     .from(timers)
     .where(eq(timers.roomId, roomId))
-    .orderBy(asc(timers.order))
-    .all();
+    .orderBy(asc(timers.order));
 }
 
-export function getTimer(id: string): Timer | undefined {
-  return db.select().from(timers).where(eq(timers.id, id)).get();
+export async function getTimer(id: string): Promise<Timer | undefined> {
+  const rows = await getDb().select().from(timers).where(eq(timers.id, id));
+  return rows[0];
 }
 
-export function getActiveTimer(roomId: string): Timer | undefined {
-  return db
-    .select()
-    .from(timers)
-    .where(eq(timers.roomId, roomId))
-    .all()
-    .find((t) => t.status === "running" || t.status === "paused");
+export async function getActiveTimer(
+  roomId: string,
+): Promise<Timer | undefined> {
+  const all = await listTimers(roomId);
+  return all.find((t) => t.status === "running" || t.status === "paused");
 }
 
 export interface CreateTimerInput {
@@ -39,15 +37,10 @@ export interface CreateTimerInput {
   autoAdvance?: boolean;
 }
 
-export function createTimer(input: CreateTimerInput): Timer {
+export async function createTimer(input: CreateTimerInput): Promise<Timer> {
   const id = nanoid(10);
-  const now = new Date();
-  const maxOrder = db
-    .select()
-    .from(timers)
-    .where(eq(timers.roomId, input.roomId))
-    .all()
-    .reduce((max, t) => Math.max(max, t.order), -1);
+  const existing = await listTimers(input.roomId);
+  const maxOrder = existing.reduce((max, t) => Math.max(max, t.order), -1);
 
   const data: NewTimer = {
     id,
@@ -62,42 +55,44 @@ export function createTimer(input: CreateTimerInput): Timer {
     elapsedMs: 0,
     autoAdvance: input.autoAdvance ?? false,
     wrapupAt: "[]",
-    createdAt: now,
-    updatedAt: now,
   };
-  db.insert(timers).values(data).run();
-  return getTimer(id)!;
+  const [row] = await getDb().insert(timers).values(data).returning();
+  return row;
 }
 
-export function updateTimer(
+export async function updateTimer(
   id: string,
   patch: Partial<Omit<Timer, "id" | "roomId" | "createdAt">>,
-): Timer | undefined {
-  db.update(timers)
+): Promise<Timer | undefined> {
+  const [row] = await getDb()
+    .update(timers)
     .set({ ...patch, updatedAt: new Date() })
     .where(eq(timers.id, id))
-    .run();
-  return getTimer(id);
+    .returning();
+  return row;
 }
 
-export function deleteTimer(id: string): boolean {
-  const r = db.delete(timers).where(eq(timers.id, id)).run();
-  return r.changes > 0;
+export async function deleteTimer(id: string): Promise<boolean> {
+  const rows = await getDb()
+    .delete(timers)
+    .where(eq(timers.id, id))
+    .returning({ id: timers.id });
+  return rows.length > 0;
 }
 
-function stopOthers(roomId: string, keepId: string) {
-  const others = listTimers(roomId).filter(
+async function stopOthers(roomId: string, keepId: string): Promise<void> {
+  const others = (await listTimers(roomId)).filter(
     (t) => t.id !== keepId && (t.status === "running" || t.status === "paused"),
   );
   for (const t of others) {
-    updateTimer(t.id, { status: "idle", startedAt: null, elapsedMs: 0 });
+    await updateTimer(t.id, { status: "idle", startedAt: null, elapsedMs: 0 });
   }
 }
 
-export function startTimer(id: string): Timer | undefined {
-  const t = getTimer(id);
+export async function startTimer(id: string): Promise<Timer | undefined> {
+  const t = await getTimer(id);
   if (!t) return undefined;
-  stopOthers(t.roomId, id);
+  await stopOthers(t.roomId, id);
   return updateTimer(id, {
     status: "running",
     startedAt: new Date(),
@@ -105,34 +100,23 @@ export function startTimer(id: string): Timer | undefined {
   });
 }
 
-export function pauseTimer(id: string): Timer | undefined {
-  const t = getTimer(id);
+export async function pauseTimer(id: string): Promise<Timer | undefined> {
+  const t = await getTimer(id);
   if (!t || t.status !== "running" || !t.startedAt) return t;
   const elapsedMs = t.elapsedMs + (Date.now() - t.startedAt.getTime());
-  return updateTimer(id, {
-    status: "paused",
-    startedAt: null,
-    elapsedMs,
-  });
+  return updateTimer(id, { status: "paused", startedAt: null, elapsedMs });
 }
 
-export function resumeTimer(id: string): Timer | undefined {
-  const t = getTimer(id);
+export async function resumeTimer(id: string): Promise<Timer | undefined> {
+  const t = await getTimer(id);
   if (!t || t.status !== "paused") return t;
-  return updateTimer(id, {
-    status: "running",
-    startedAt: new Date(),
-  });
+  return updateTimer(id, { status: "running", startedAt: new Date() });
 }
 
-export function stopTimer(id: string): Timer | undefined {
-  return updateTimer(id, {
-    status: "idle",
-    startedAt: null,
-    elapsedMs: 0,
-  });
+export async function stopTimer(id: string): Promise<Timer | undefined> {
+  return updateTimer(id, { status: "idle", startedAt: null, elapsedMs: 0 });
 }
 
-export function resetTimer(id: string): Timer | undefined {
+export async function resetTimer(id: string): Promise<Timer | undefined> {
   return stopTimer(id);
 }

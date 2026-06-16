@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useWsTimer } from "@/features/timer/hooks/use-ws-timer";
+import { useRealtimeTimer } from "@/features/timer/hooks/use-realtime-timer";
 import { useTimerTick } from "@/features/timer/hooks/use-timer";
 import { useTimerStore } from "@/features/timer/store/timer-store";
 import { RoleTopBar } from "@/features/rhema/components/command-center/role-top-bar";
@@ -29,7 +29,7 @@ export default function ModeratorClient({
   roomId: string;
   roomName: string;
 }) {
-  const { sendCommand } = useWsTimer(roomId, "moderator");
+  const { sendCommand } = useRealtimeTimer(roomId, "moderator");
   const timers = useTimerStore((s) => s.timers);
   const activeTimerId = useTimerStore((s) => s.activeTimerId);
   const wsConnected = useTimerStore((s) => s.wsConnected);

@@ -1,18 +1,24 @@
-import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+// Schema Postgres (Supabase).
+import {
+  boolean,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
-export const rooms = sqliteTable("rooms", {
+export const rooms = pgTable("rooms", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp_ms" })
+  createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
-    .default(sql`(unixepoch('now','subsec')*1000)`),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
-    .default(sql`(unixepoch('now','subsec')*1000)`),
+    .defaultNow(),
 });
 
-export const timers = sqliteTable("timers", {
+export const timers = pgTable("timers", {
   id: text("id").primaryKey(),
   roomId: text("room_id")
     .notNull()
@@ -23,7 +29,7 @@ export const timers = sqliteTable("timers", {
     .notNull()
     .default("countdown"),
   duration: integer("duration").notNull().default(0),
-  scheduledStart: integer("scheduled_start", { mode: "timestamp_ms" }),
+  scheduledStart: timestamp("scheduled_start", { withTimezone: true }),
   color: text("color").notNull().default("white"),
   order: integer("order").notNull().default(0),
   status: text("status", {
@@ -31,21 +37,19 @@ export const timers = sqliteTable("timers", {
   })
     .notNull()
     .default("idle"),
-  startedAt: integer("started_at", { mode: "timestamp_ms" }),
+  startedAt: timestamp("started_at", { withTimezone: true }),
   elapsedMs: integer("elapsed_ms").notNull().default(0),
-  autoAdvance: integer("auto_advance", { mode: "boolean" })
-    .notNull()
-    .default(false),
+  autoAdvance: boolean("auto_advance").notNull().default(false),
   wrapupAt: text("wrapup_at").notNull().default("[]"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" })
+  createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
-    .default(sql`(unixepoch('now','subsec')*1000)`),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
-    .default(sql`(unixepoch('now','subsec')*1000)`),
+    .defaultNow(),
 });
 
-export const messages = sqliteTable("messages", {
+export const messages = pgTable("messages", {
   id: text("id").primaryKey(),
   roomId: text("room_id")
     .notNull()
@@ -54,23 +58,24 @@ export const messages = sqliteTable("messages", {
   color: text("color", { enum: ["white", "green", "red"] })
     .notNull()
     .default("white"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" })
+  createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
-    .default(sql`(unixepoch('now','subsec')*1000)`),
+    .defaultNow(),
 });
 
-export const connections = sqliteTable("connections", {
-  id: text("id").primaryKey(),
+// Estado efêmero por sala (antes vivia na memória do servidor WebSocket).
+export const roomState = pgTable("room_state", {
   roomId: text("room_id")
-    .notNull()
+    .primaryKey()
     .references(() => rooms.id, { onDelete: "cascade" }),
-  type: text("type", {
-    enum: ["controller", "viewer", "operator", "moderator", "agenda"],
-  }).notNull(),
-  label: text("label").notNull().default(""),
-  connectedAt: integer("connected_at", { mode: "timestamp_ms" })
+  blackout: boolean("blackout").notNull().default(false),
+  focusMode: boolean("focus_mode").notNull().default(false),
+  messageId: text("message_id"),
+  messageText: text("message_text"),
+  messageColor: text("message_color"),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
-    .default(sql`(unixepoch('now','subsec')*1000)`),
+    .defaultNow(),
 });
 
 export type Room = typeof rooms.$inferSelect;
@@ -79,3 +84,4 @@ export type Timer = typeof timers.$inferSelect;
 export type NewTimer = typeof timers.$inferInsert;
 export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
+export type RoomState = typeof roomState.$inferSelect;
