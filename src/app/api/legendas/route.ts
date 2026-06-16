@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@anthropic-ai/claude-agent-sdk";
+import Anthropic from "@anthropic-ai/sdk";
 import { CURADOR_SYSTEM_PROMPT } from "@/features/rhema/lib/prompts/curador";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 60;
+
+// Modelo padrão. Para reduzir custo, troque por "claude-sonnet-4-6".
+const MODEL = "claude-opus-4-8";
 
 type LegendaSaida = {
   texto: string;
@@ -23,47 +26,42 @@ export async function POST(req: NextRequest) {
     if (!transcricao || transcricao.trim().length < 40) {
       return NextResponse.json(
         { erro: "Transcrição muito curta. Capture mais áudio antes de gerar." },
-        { status: 400 }
+        { status: 400 },
+      );
+    }
+
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { erro: "ANTHROPIC_API_KEY não configurada no servidor." },
+        { status: 500 },
       );
     }
 
     const userPrompt = `Transcrição da palavra da pastora (pode conter ruído/erros da transcrição automática — interprete o sentido):\n\n"""\n${transcricao}\n"""\n\nGere as 2 legendas conforme instruído. Responda apenas com o JSON.`;
 
-    // Usa a assinatura local do Claude Code (sem API key)
-    const iterator = query({
-      prompt: userPrompt,
-      options: {
-        systemPrompt: {
-          type: "preset",
-          preset: "claude_code",
-          append: CURADOR_SYSTEM_PROMPT,
-        },
-        allowedTools: [],
-        settingSources: [],
-      },
+    const client = new Anthropic({ apiKey });
+    const message = await client.messages.create({
+      model: MODEL,
+      max_tokens: 2000,
+      system: CURADOR_SYSTEM_PROMPT,
+      messages: [{ role: "user", content: userPrompt }],
     });
 
-    let textoResultado = "";
-    for await (const message of iterator) {
-      if (message.type === "result") {
-        if (message.subtype === "success") {
-          textoResultado = message.result;
-        } else {
-          return NextResponse.json(
-            { erro: `Falha na execução: ${message.subtype}` },
-            { status: 502 }
-          );
-        }
-      }
-    }
+    const textoResultado = message.content
+      .filter((b): b is Anthropic.TextBlock => b.type === "text")
+      .map((b) => b.text)
+      .join("");
 
     if (!textoResultado) {
       return NextResponse.json(
-        { erro: "SDK não retornou resultado." },
-        { status: 502 }
+        { erro: "Modelo não retornou conteúdo." },
+        { status: 502 },
       );
     }
 
+    // O prompt instrui JSON-only, mas extraímos o objeto por segurança
+    // (caso venha envolto em cercas de código).
     const jsonMatch = textoResultado.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       return NextResponse.json(
@@ -71,7 +69,7 @@ export async function POST(req: NextRequest) {
           erro: "Modelo não retornou JSON estruturado.",
           raw: textoResultado.slice(0, 500),
         },
-        { status: 502 }
+        { status: 502 },
       );
     }
 
