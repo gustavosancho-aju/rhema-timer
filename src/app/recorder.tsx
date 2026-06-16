@@ -105,6 +105,12 @@ export default function Recorder() {
   const [salvo, setSalvo] = useState(false);
   const [cultoTipo, setCultoTipo] = useState<CultoTipo | "">("");
   const [escolhidaIdx, setEscolhidaIdx] = useState<number | null>(null);
+  const [postFinal, setPostFinal] = useState<{
+    texto: string;
+    justificativa?: string;
+  } | null>(null);
+  const [gerandoPost, setGerandoPost] = useState(false);
+  const [erroPost, setErroPost] = useState<string | null>(null);
 
   useEffect(() => {
     // Detecção de capacidade do browser (SpeechRecognition) só existe no
@@ -234,6 +240,29 @@ export default function Recorder() {
     setEscolhidaIdx(g.escolhidaIdx);
     setSalvo(false);
     setErro(null);
+  }, []);
+
+  const gerarPostDomingo = useCallback(async () => {
+    setGerandoPost(true);
+    setErroPost(null);
+    setPostFinal(null);
+    try {
+      const r = await fetch("/api/legendas/combinar", { method: "POST" });
+      const data = (await r.json()) as {
+        texto?: string;
+        justificativa?: string;
+        erro?: string;
+      };
+      if (!r.ok || data.erro || !data.texto) {
+        setErroPost(data.erro ?? `Erro ${r.status}`);
+      } else {
+        setPostFinal({ texto: data.texto, justificativa: data.justificativa });
+      }
+    } catch (e) {
+      setErroPost(e instanceof Error ? e.message : String(e));
+    } finally {
+      setGerandoPost(false);
+    }
   }, []);
 
   const limpar = () => {
@@ -539,6 +568,78 @@ export default function Recorder() {
         transcricao={(textoFinal + " " + textoInterim).trim()}
         gravando={gravando}
       />
+
+      {/* Post do domingo: combina a última escolhida do Sozo + do Culto da Família */}
+      <section className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="rh-eyebrow">Post do domingo</h2>
+          <button
+            onClick={gerarPostDomingo}
+            disabled={gerandoPost}
+            className="rh-btn rh-btn-primary"
+          >
+            {gerandoPost ? "Combinando…" : "✦ Gerar post do domingo"}
+          </button>
+        </div>
+
+        {erroPost && (
+          <div
+            className="rounded-xl p-4 text-sm"
+            style={{
+              background: "rgba(245,158,11,0.08)",
+              border: "1px solid rgba(245,158,11,0.3)",
+              color: "#fcd34d",
+            }}
+          >
+            {erroPost}
+          </div>
+        )}
+
+        {postFinal && (
+          <article className="rh-card flex flex-col gap-3 p-4">
+            <div className="flex items-center justify-between gap-2">
+              <span
+                className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                style={{
+                  background: "rgba(143,216,220,0.12)",
+                  color: "var(--luxo-aqua)",
+                  border: "1px solid rgba(143,216,220,0.35)",
+                }}
+              >
+                Legenda final
+              </span>
+              <button
+                onClick={() => copiar(postFinal.texto)}
+                className="text-xs rounded-lg px-3 py-1.5 transition"
+                style={{
+                  background: "var(--bg-2)",
+                  border: "1px solid var(--border-default)",
+                  color: "var(--fg-2)",
+                }}
+              >
+                Copiar
+              </button>
+            </div>
+            <p
+              className="whitespace-pre-wrap leading-relaxed"
+              style={{ color: "var(--fg-1)" }}
+            >
+              {postFinal.texto}
+            </p>
+            {postFinal.justificativa && (
+              <p
+                className="text-xs italic pt-2"
+                style={{
+                  color: "var(--fg-3)",
+                  borderTop: "1px solid var(--border-subtle)",
+                }}
+              >
+                {postFinal.justificativa}
+              </p>
+            )}
+          </article>
+        )}
+      </section>
 
       {/* Histórico das últimas gravações */}
       <HistoricoGravacoes historico={historico} onRestaurar={restaurar} />

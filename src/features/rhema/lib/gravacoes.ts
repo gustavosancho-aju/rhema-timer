@@ -57,6 +57,27 @@ export async function setEscolhida(
   return row;
 }
 
+/** Textos das legendas escolhidas mais recentes (acervo para few-shot). */
+export async function getLegendasEscolhidas(limit = 6): Promise<string[]> {
+  const rows = await getDb()
+    .select()
+    .from(gravacoes)
+    .where(isNotNull(gravacoes.escolhidaIdx))
+    .orderBy(desc(gravacoes.createdAt))
+    .limit(limit);
+  return rows
+    .map((g) =>
+      g.escolhidaIdx != null ? g.legendas[g.escolhidaIdx]?.texto : null,
+    )
+    .filter((t): t is string => Boolean(t && t.trim()));
+}
+
+/** Texto da legenda escolhida de uma gravação (ou undefined). */
+export function textoEscolhido(g: Gravacao): string | undefined {
+  if (g.escolhidaIdx == null) return undefined;
+  return g.legendas[g.escolhidaIdx]?.texto;
+}
+
 /** Última gravação de um culto que já tem legenda escolhida (para o post final). */
 export async function getUltimaEscolhida(
   cultoTipo: CultoTipo,
