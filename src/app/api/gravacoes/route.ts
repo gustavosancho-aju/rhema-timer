@@ -7,7 +7,7 @@ import {
 import type {
   CultoTipo,
   LegendaJson,
-} from "@/features/rhema/lib/gravacoes-schema";
+} from "@/features/rhema/lib/gravacoes-types";
 
 export const runtime = "nodejs";
 

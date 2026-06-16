@@ -3,24 +3,13 @@ import { nanoid } from "nanoid";
 import { getDb } from "@/shared/lib/db";
 import {
   gravacoes,
-  type CultoTipo,
   type Gravacao,
-  type LegendaJson,
   type NewGravacao,
 } from "./gravacoes-schema";
+import type { CultoTipo, LegendaJson } from "./gravacoes-types";
 
-export const CULTO_TIPOS: CultoTipo[] = ["sozo", "familia", "quarta"];
-
-export const CULTO_LABELS: Record<CultoTipo, string> = {
-  sozo: "Sozo",
-  familia: "Culto da Família",
-  quarta: "Culto de Quarta",
-};
-
-/** Type guard puro — valida o tipo de culto recebido. */
-export function isCultoTipo(value: unknown): value is CultoTipo {
-  return typeof value === "string" && CULTO_TIPOS.includes(value as CultoTipo);
-}
+// Re-export client-safe helpers para conveniência (rotas/server).
+export { CULTO_LABELS, CULTO_TIPOS, isCultoTipo } from "./gravacoes-types";
 
 export async function listGravacoes(opts?: {
   cultoTipo?: CultoTipo;

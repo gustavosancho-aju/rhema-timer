@@ -1,14 +1,8 @@
 // Schema Postgres (Supabase) da feature rhema: gravações salvas com tipo de
-// culto e legendas geradas. Usado pelo db:push e pela data layer.
+// culto e legendas geradas. Usado pelo db:push e pela data layer (server-only).
+// Tipos/constantes client-safe ficam em gravacoes-types.ts.
 import { integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-
-export type CultoTipo = "sozo" | "familia" | "quarta";
-
-export interface LegendaJson {
-  texto: string;
-  direcionamento: "emotiva" | "reflexiva" | "biblica";
-  justificativa: string;
-}
+import type { LegendaJson } from "./gravacoes-types";
 
 export const gravacoes = pgTable("gravacoes", {
   id: text("id").primaryKey(),
