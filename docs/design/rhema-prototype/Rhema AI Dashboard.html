@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Rhema AI — Dashboard</title>
+<meta name="viewport" content="width=1440" />
+<link rel="stylesheet" href="styles/luxo-tokens.css" />
+<link rel="stylesheet" href="styles/app.css" />
+<style>
+  html, body { margin: 0; padding: 0; background: #001010; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="components/primitives.jsx"></script>
+<script type="text/babel" src="components/sample-data.jsx"></script>
+<script type="text/babel" src="components/variation-a-command-center.jsx"></script>
+<script type="text/babel" src="components/variation-b-teleprompter.jsx"></script>
+<script type="text/babel" src="components/variation-c-conversational.jsx"></script>
+<script type="text/babel" src="components/timer-sample-data.jsx"></script>
+<script type="text/babel" src="components/timer-rooms.jsx"></script>
+<script type="text/babel" src="components/timer-controller.jsx"></script>
+<script type="text/babel" src="components/timer-viewer.jsx"></script>
+<script type="text/babel" src="components/timer-operator-moderator-agenda.jsx"></script>
+
+<script type="text/babel">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accent": "balanced",
+  "transcriptSize": 1,
+  "showIndicators": true
+}/*EDITMODE-END*/;
+
+function App() {
+  const [tweaks, setTweaks] = useTweaks(TWEAK_DEFAULTS);
+
+  // Apply accent — swaps --luxo-glow / gold / purple dominance live
+  React.useEffect(() => {
+    const root = document.documentElement;
+    if (tweaks.accent === 'aqua') {
+      root.style.setProperty('--accent-live', 'var(--luxo-glow)');
+    } else if (tweaks.accent === 'teal') {
+      root.style.setProperty('--accent-live', 'var(--luxo-aqua)');
+    } else if (tweaks.accent === 'petroleo') {
+      root.style.setProperty('--accent-live', 'var(--luxo-petroleo-hi)');
+    } else {
+      root.style.setProperty('--accent-live', 'var(--luxo-glow)');
+    }
+  }, [tweaks.accent]);
+
+  return (
+    <>
+      <DesignCanvas>
+        <DCSection
+          id="intro"
+          title="Rhema AI — Dashboard"
+          subtitle="Sistema de transcrição e legendas para cultos · 3 direções exploradas"
+        >
+          <DCArtboard id="a" label="A · Command Center" width={1440} height={900}>
+            <VariationA fontScale={tweaks.transcriptSize} showIndicators={tweaks.showIndicators} />
+          </DCArtboard>
+          <DCArtboard id="b" label="B · Teleprompter" width={1440} height={900}>
+            <VariationB fontScale={tweaks.transcriptSize} />
+          </DCArtboard>
+          <DCArtboard id="c" label="C · Conversational" width={1440} height={900}>
+            <VariationC fontScale={tweaks.transcriptSize} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection
+          id="timer"
+          title="Timer · Sala de Cronômetro"
+          subtitle="Sistema de cronômetros colaborativos em tempo real · 5 interfaces"
+        >
+          <DCArtboard id="rooms" label="Rooms · tela inicial" width={1440} height={900}>
+            <TimerRooms />
+          </DCArtboard>
+          <DCArtboard id="controller" label="Controller · operador completo" width={1440} height={900}>
+            <TimerController />
+          </DCArtboard>
+          <DCArtboard id="viewer" label="Viewer · palco (fullscreen)" width={1440} height={900}>
+            <TimerViewer />
+          </DCArtboard>
+          <DCArtboard id="operator" label="Operator · tablet touch" width={1024} height={768}>
+            <TimerOperator />
+          </DCArtboard>
+          <DCArtboard id="moderator" label="Moderator · recados ao palco" width={960} height={720}>
+            <TimerModerator />
+          </DCArtboard>
+          <DCArtboard id="agenda" label="Agenda · somente leitura" width={720} height={900}>
+            <TimerAgenda />
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="Acento">
+          <TweakRadio
+            label="Cor dominante"
+            value={tweaks.accent}
+            onChange={(v) => setTweaks({ accent: v })}
+            options={[
+              { value: 'balanced', label: 'Balanceado' },
+              { value: 'aqua', label: 'Aqua luminoso' },
+              { value: 'teal', label: 'Teal' },
+              { value: 'petroleo', label: 'Petróleo' },
+            ]}
+          />
+        </TweakSection>
+        <TweakSection title="Transcrição">
+          <TweakSlider
+            label="Tamanho do texto"
+            value={tweaks.transcriptSize}
+            min={0.8} max={1.4} step={0.05}
+            onChange={(v) => setTweaks({ transcriptSize: v })}
+            format={(v) => `${Math.round(v * 100)}%`}
+          />
+          <TweakToggle
+            label="Indicadores ao vivo"
+            value={tweaks.showIndicators}
+            onChange={(v) => setTweaks({ showIndicators: v })}
+          />
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
