@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { getDb } from "./db";
+import { getDb } from "@/shared/lib/db";
 import { messages, type Message, type NewMessage } from "./schema";
 
 export type MessageColor = "white" | "green" | "red";

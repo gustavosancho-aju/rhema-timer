@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { getDb } from "./db";
+import { getDb } from "@/shared/lib/db";
 import { rooms, type NewRoom, type Room } from "./schema";
 
 export async function listRooms(): Promise<Room[]> {

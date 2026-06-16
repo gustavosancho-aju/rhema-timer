@@ -1,13 +1,15 @@
-// Conexão Drizzle com o Postgres do Supabase (server-side).
-// Inicialização preguiçosa: só conecta quando `getDb()` é chamado, evitando
-// abrir conexão durante o build.
+// Conexão Drizzle com o Postgres do Supabase (server-side), compartilhada entre
+// features. Inicialização preguiçosa: só conecta quando `getDb()` é chamado,
+// evitando abrir conexão durante o build.
+//
+// Sem schema fixo: as features definem suas próprias tabelas e consultam via
+// `getDb().select().from(tabela)`. (db.query relacional não é usado.)
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import * as schema from "./schema";
 
-let db: PostgresJsDatabase<typeof schema> | null = null;
+let db: PostgresJsDatabase | null = null;
 
-export function getDb(): PostgresJsDatabase<typeof schema> {
+export function getDb(): PostgresJsDatabase {
   if (db) return db;
 
   const url = process.env.DATABASE_URL;
@@ -20,6 +22,6 @@ export function getDb(): PostgresJsDatabase<typeof schema> {
 
   // prepare:false é recomendado para o pooler (porta 6543) do Supabase.
   const sql = postgres(url, { prepare: false });
-  db = drizzle(sql, { schema });
+  db = drizzle(sql);
   return db;
 }
