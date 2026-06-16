@@ -94,5 +94,46 @@ gravacoes
 
 ## Riscos
 
-- **R1 (alto):** `/api/legendas` usa o SDK com preset `claude_code` (assinatura local), não a `ANTHROPIC_API_KEY`. Pode não funcionar no Vercel. **Validar antes da 08.4/08.5** (que dependem da geração via IA).
-- **R2 (médio):** acervo few-shot grande infla o prompt (custo/latência). Mitigar com limite de exemplos.
+- **R1 (alto):** `/api/legendas` usa o SDK com preset `claude_code` (assinatura local), não a `ANTHROPIC_API_KEY`. Pode não funcionar no Vercel. **Validar antes da 08.4/08.5** (que dependem da geração via IA). → ✅ resolvido na Story 08.0.
+- **R2 (médio):** acervo few-shot grande infla o prompt (custo/latência). Mitigar com limite de exemplos. → mitigado (limite de 6 em `prompts/few-shot.ts`).
+
+---
+
+## Backlog de UX/UI (pós-Epic 08) — @ux-design-expert / @dev
+
+Melhorias de polish levantadas pela Uma após a integração na tela real
+(command-center). Não bloqueiam o uso; implementar quando houver tempo.
+
+### B1 — Micro-interações e estados
+- **Hover** nas linhas do histórico (LeftRail `GravacaoRow`): leve realce de
+  fundo ao passar o mouse (hoje só muda o cursor). Sugestão: classe
+  `.rh-history-row:hover { background: var(--bg-glass) }` em `globals.css`.
+- **Feedback ao salvar**: micro-animação/toast confirmando "Salvo no histórico"
+  (hoje o botão vira "✓ Salvo", mas some no próximo gerar).
+- Arquivos: `command-center/left-rail.tsx`, `command-center/right-agent.tsx`,
+  `app/globals.css`.
+
+### B2 — Acessibilidade (WCAG AA) dos controles novos
+- **Foco de teclado** visível nos botões "escolher esta", chips de culto e
+  status (Sozo/Família) — adicionar `:focus-visible` com outline.
+- **Contraste**: validar os chips cinza (`var(--fg-3)` sobre `var(--bg-2)`) ≥ 4.5:1.
+- **Labels/aria**: `aria-pressed` nos toggles (culto, escolher), `aria-label`
+  nos botões só-ícone. Rodar `*a11y-check`.
+- Arquivos: `command-center/right-agent.tsx`, `command-center/left-rail.tsx`,
+  `app/page.tsx`.
+
+### B3 — Restaurar com rolagem até as legendas
+- Ao clicar **Restaurar** numa gravação (LeftRail), além de recarregar as
+  legendas, **rolar a página** até o painel "Agente Curador" (à direita) para o
+  usuário ver o que voltou. Sugestão: `ref` no painel + `scrollIntoView({behavior:"smooth"})`
+  no handler `restaurar` de `app/page.tsx`.
+
+### B4 — Reescolher legenda no histórico (evolução da 08.3)
+- Hoje a escolha é feita **antes de salvar**. Permitir **trocar a legenda
+  escolhida** de uma gravação já salva, usando o endpoint que já existe
+  (`PATCH /api/gravacoes/[id]`). UI: ao restaurar/expandir uma gravação, permitir
+  marcar outra legenda → PATCH.
+
+### B5 — Domínio próprio + reset da senha do banco (infra, não-UX)
+- Configurar domínio no Vercel.
+- Resetar a senha do Postgres no Supabase (foi exposta no chat durante o setup).
