@@ -599,13 +599,21 @@ function SalvarBlock({
         gap: 10,
       }}
     >
+      <div className="flex flex-col" style={{ gap: 2 }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: "var(--fg-1)" }}>
+          Salvar no histórico
+        </span>
+        <span style={{ fontSize: 11, color: "var(--fg-3)", lineHeight: 1.4 }}>
+          Marque a legenda definitiva acima e escolha o culto.
+        </span>
+      </div>
       <div
         style={{
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: 600,
           textTransform: "uppercase",
           letterSpacing: "0.12em",
-          color: "var(--fg-2)",
+          color: "var(--fg-3)",
         }}
       >
         Tipo de culto
