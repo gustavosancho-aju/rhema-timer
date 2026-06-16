@@ -5,10 +5,9 @@ import { DETECTOR_BIBLICO_SYSTEM_PROMPT } from "@/features/rhema/lib/prompts/det
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-// Este endpoint roda com alta frequência (a cada ~20s durante o culto).
-// RECOMENDAÇÃO: troque por "claude-haiku-4-5" — mais rápido e barato para esta
-// classificação em tempo real (decisão de custo/latência sua).
-const MODEL = "claude-opus-4-8";
+// Endpoint de alta frequência (a cada ~20s durante o culto). Haiku é rápido e
+// barato — ideal para esta classificação em tempo real.
+const MODEL = "claude-haiku-4-5";
 
 /**
  * POST /api/detectar-versiculo

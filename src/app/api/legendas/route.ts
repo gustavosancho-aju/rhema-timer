@@ -5,8 +5,9 @@ import { CURADOR_SYSTEM_PROMPT } from "@/features/rhema/lib/prompts/curador";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-// Modelo padrão. Para reduzir custo, troque por "claude-sonnet-4-6".
-const MODEL = "claude-opus-4-8";
+// Sonnet 4.6: boa qualidade editorial com custo menor que Opus. A geração de
+// legendas roda poucas vezes por culto.
+const MODEL = "claude-sonnet-4-6";
 
 type LegendaSaida = {
   texto: string;
