@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { testarConexao, type HolyricsConfig } from "@/lib/holyrics-client";
+import { testarConexao, type HolyricsConfig } from "@/features/rhema/lib/holyrics-client";
 
 export const runtime = "nodejs";
 export const maxDuration = 10;

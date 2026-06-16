@@ -31,6 +31,8 @@ export default function HolyricsConfigPage() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<ConfigSalva>;
+        // Load client-only (localStorage) no mount evita mismatch de hidratação.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCfg({ ...CONFIG_PADRAO, ...parsed });
       }
     } catch {

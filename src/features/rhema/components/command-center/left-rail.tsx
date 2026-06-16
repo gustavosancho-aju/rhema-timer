@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import { Badge, Dot, Eyebrow, Serif } from "@/components/rhema/primitives";
+import { Badge, Dot, Eyebrow, Serif } from "@/shared/components/ui/primitives";
 
 function formatDur(ms: number): string {
   const totalSec = Math.floor(ms / 1000);

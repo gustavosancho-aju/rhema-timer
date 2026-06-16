@@ -1,8 +1,8 @@
 "use client";
 
-import { useTimerStore, type TimerState } from "@/store/timer-store";
-import { formatTime } from "@/lib/timer/format-time";
-import { COLOR_MAP, type TimerColor } from "@/lib/timer/colors";
+import { useTimerStore, type TimerState } from "@/features/timer/store/timer-store";
+import { formatTime } from "@/features/timer/lib/format-time";
+import { COLOR_MAP, type TimerColor } from "@/features/timer/lib/colors";
 
 export default function TimerList({
   timers,

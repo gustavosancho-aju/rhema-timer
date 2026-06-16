@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useWsTimer } from "@/hooks/timer/use-ws-timer";
-import { useTimerTick } from "@/hooks/timer/use-timer";
-import { useTimerStore } from "@/store/timer-store";
-import { playChime } from "@/lib/timer/chime";
-import { Serif } from "@/components/rhema/primitives";
+import { useWsTimer } from "@/features/timer/hooks/use-ws-timer";
+import { useTimerTick } from "@/features/timer/hooks/use-timer";
+import { useTimerStore } from "@/features/timer/store/timer-store";
+import { playChime } from "@/features/timer/lib/chime";
+import { Serif } from "@/shared/components/ui/primitives";
 
 export default function ViewerClient({
   roomId,

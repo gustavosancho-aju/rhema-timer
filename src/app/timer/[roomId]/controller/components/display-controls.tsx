@@ -1,6 +1,6 @@
 "use client";
 
-import { useTimerStore } from "@/store/timer-store";
+import { useTimerStore } from "@/features/timer/store/timer-store";
 
 export default function DisplayControls({
   sendCommand,

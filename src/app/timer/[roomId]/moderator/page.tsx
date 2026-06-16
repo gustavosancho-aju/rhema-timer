@@ -1,4 +1,4 @@
-import { getRoom } from "@/lib/timer/rooms";
+import { getRoom } from "@/features/timer/lib/rooms";
 import { notFound } from "next/navigation";
 import ModeratorClient from "./moderator-client";
 

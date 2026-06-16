@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTimerStore } from "@/store/timer-store";
+import { useTimerStore } from "@/features/timer/store/timer-store";
 
 type Color = "white" | "green" | "red";
 

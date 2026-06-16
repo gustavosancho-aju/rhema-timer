@@ -5,7 +5,7 @@ import type {
   RespostaDetector,
   SugestaoVersiculo,
   VersiculoDetectado,
-} from "@/lib/types";
+} from "@/shared/types";
 
 /**
  * Hook que periodicamente analisa a transcrição em busca de versículos bíblicos.

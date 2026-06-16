@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getRoom } from "@/lib/timer/rooms";
+import { getRoom } from "@/features/timer/lib/rooms";
 
 export default async function RoomLayout({
   children,

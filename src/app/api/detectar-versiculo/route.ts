@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@anthropic-ai/claude-agent-sdk";
-import { DETECTOR_BIBLICO_SYSTEM_PROMPT } from "@/lib/prompts/detector-biblico";
+import { DETECTOR_BIBLICO_SYSTEM_PROMPT } from "@/features/rhema/lib/prompts/detector-biblico";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Pulse, Dot, Ico, IconBtn } from "@/components/rhema/primitives";
+import { Pulse, Dot, Ico, IconBtn } from "@/shared/components/ui/primitives";
 
 const TABS = [
   { key: "live", label: "Ao vivo", href: "/" },

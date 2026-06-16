@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { VersiculosSugeridos } from "@/components/versiculos-sugeridos";
+import { VersiculosSugeridos } from "@/features/rhema/components/versiculos-sugeridos";
 
 type Direcionamento = "emotiva" | "reflexiva" | "biblica";
 
@@ -96,6 +96,9 @@ export default function Recorder() {
   const gravandoRef = useRef(false);
 
   useEffect(() => {
+    // Detecção de capacidade do browser (SpeechRecognition) só existe no
+    // cliente; precisa rodar no mount para não divergir do HTML do servidor.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSuportado(!!getSpeechRecognitionCtor());
   }, []);
 

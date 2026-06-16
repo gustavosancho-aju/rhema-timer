@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Pulse, Badge, Serif } from "@/components/rhema/primitives";
+import { Pulse, Badge, Serif } from "@/shared/components/ui/primitives";
 
 export function RoleTopBar({
   role,

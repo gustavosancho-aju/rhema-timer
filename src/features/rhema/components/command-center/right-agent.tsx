@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { Legenda } from "@/hooks/use-recorder";
-import { Badge, Dot, Eyebrow, Ico } from "@/components/rhema/primitives";
+import type { Legenda } from "@/features/rhema/hooks/use-recorder";
+import { Badge, Dot, Eyebrow, Ico } from "@/shared/components/ui/primitives";
 
 type AgentStepStatus = "done" | "active" | "pending";
 

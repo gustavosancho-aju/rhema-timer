@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
 import next from "next";
 import { WebSocketServer } from "ws";
-import { attachWebSocketHandlers } from "./src/lib/timer/ws-handler";
+import { attachWebSocketHandlers } from "./src/features/timer/lib/ws-handler";
 
 const port = parseInt(process.env.PORT ?? "3000", 10);
 const dev = process.env.NODE_ENV !== "production";

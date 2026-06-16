@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useTimerStore } from "@/store/timer-store";
-import { useWsTimer } from "@/hooks/timer/use-ws-timer";
-import { useTimerTick } from "@/hooks/timer/use-timer";
-import { RoleTopBar } from "@/components/command-center/role-top-bar";
+import { useTimerStore } from "@/features/timer/store/timer-store";
+import { useWsTimer } from "@/features/timer/hooks/use-ws-timer";
+import { useTimerTick } from "@/features/timer/hooks/use-timer";
+import { RoleTopBar } from "@/features/rhema/components/command-center/role-top-bar";
 import TimerList from "./components/timer-list";
 import TimerForm from "./components/timer-form";
 import MessagePanel from "./components/message-panel";
