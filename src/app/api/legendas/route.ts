@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@anthropic-ai/claude-agent-sdk";
-import { CURADOR_SYSTEM_PROMPT } from "@/lib/prompts/curador";
+import { CURADOR_SYSTEM_PROMPT } from "@/features/rhema/lib/prompts/curador";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { TimerState } from "@/store/timer-store";
+import type { TimerState } from "@/features/timer/store/timer-store";
 
 interface Tick {
   elapsed: number;

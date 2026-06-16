@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteRoom, getRoom, renameRoom } from "@/lib/timer/rooms";
+import { deleteRoom, getRoom, renameRoom } from "@/features/timer/lib/rooms";
 
 export const runtime = "nodejs";
 

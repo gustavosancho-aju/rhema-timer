@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Room } from "@/lib/timer/schema";
-import { TopBar } from "@/components/command-center/top-bar";
+import type { Room } from "@/features/timer/lib/schema";
+import { TopBar } from "@/features/rhema/components/command-center/top-bar";
 import {
   Badge,
   Eyebrow,
   Ico,
   Pulse,
   Serif,
-} from "@/components/rhema/primitives";
+} from "@/shared/components/ui/primitives";
 
 type RoomRow = Pick<Room, "id" | "name" | "createdAt" | "updatedAt">;
 

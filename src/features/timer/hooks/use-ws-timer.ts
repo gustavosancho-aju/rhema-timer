@@ -5,7 +5,7 @@ import {
   selectActiveTimer,
   useTimerStore,
   type TimerState,
-} from "@/store/timer-store";
+} from "@/features/timer/store/timer-store";
 
 type ClientType =
   | "controller"

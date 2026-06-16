@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRecorder } from "@/hooks/use-recorder";
-import { TopBar } from "@/components/command-center/top-bar";
-import { LeftRail } from "@/components/command-center/left-rail";
-import { CenterTranscript } from "@/components/command-center/center-transcript";
-import { RightAgent } from "@/components/command-center/right-agent";
-import { VersiculosSugeridos } from "@/components/versiculos-sugeridos";
+import { useRecorder } from "@/features/rhema/hooks/use-recorder";
+import { TopBar } from "@/features/rhema/components/command-center/top-bar";
+import { LeftRail } from "@/features/rhema/components/command-center/left-rail";
+import { CenterTranscript } from "@/features/rhema/components/command-center/center-transcript";
+import { RightAgent } from "@/features/rhema/components/command-center/right-agent";
+import { VersiculosSugeridos } from "@/features/rhema/components/versiculos-sugeridos";
 
 const STOP_WORDS = new Set([
   "a","o","as","os","e","é","de","do","da","dos","das","em","um","uma","uns","umas",

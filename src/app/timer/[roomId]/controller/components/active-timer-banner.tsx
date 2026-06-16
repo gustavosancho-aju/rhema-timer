@@ -1,6 +1,6 @@
 "use client";
 
-import type { TimerState } from "@/store/timer-store";
+import type { TimerState } from "@/features/timer/store/timer-store";
 
 interface Tick {
   displayTime: string;

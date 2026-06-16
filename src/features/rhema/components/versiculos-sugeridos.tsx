@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { VersiculoCard } from "@/components/versiculo-card";
-import { useDetectorVersiculos } from "@/hooks/use-detector-versiculos";
-import type { HolyricsConfigLocal, SugestaoVersiculo } from "@/lib/types";
+import { VersiculoCard } from "@/features/rhema/components/versiculo-card";
+import { useDetectorVersiculos } from "@/features/rhema/hooks/use-detector-versiculos";
+import type { HolyricsConfigLocal, SugestaoVersiculo } from "@/shared/types";
 
 type Props = {
   transcricao: string;
@@ -35,8 +35,13 @@ export function VersiculosSugeridos({ transcricao, gravando }: Props) {
   const [detectorAtivo, setDetectorAtivo]     = useState(false);
   const [carregado, setCarregado]             = useState(false);
   const [holyricsConfigurado, setHolyricsConfigurado] = useState(false);
-  const [agora, setAgora]                     = useState(Date.now());
+  const [agora, setAgora]                     = useState(0);
 
+  // Leitura de estado client-only (localStorage) deve rodar no mount, não no
+  // render nem em lazy init — caso contrário o HTML do servidor (sem acesso a
+  // localStorage) difere do cliente e quebra a hidratação. O setState aqui é
+  // intencional e roda uma única vez.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     try {
       const salvo = localStorage.getItem(STORAGE_KEY_DETECTOR);
@@ -45,6 +50,7 @@ export function VersiculosSugeridos({ transcricao, gravando }: Props) {
     setHolyricsConfigurado(!!lerConfigHolyrics());
     setCarregado(true);
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (carregado) {
@@ -53,8 +59,13 @@ export function VersiculosSugeridos({ transcricao, gravando }: Props) {
   }, [detectorAtivo, carregado]);
 
   useEffect(() => {
+    // Seed imediato via rAF (callback, não corpo do efeito) + tick a cada 5s.
+    const raf = requestAnimationFrame(() => setAgora(Date.now()));
     const id = setInterval(() => setAgora(Date.now()), 5000);
-    return () => clearInterval(id);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearInterval(id);
+    };
   }, []);
 
   const detectorRodando = detectorAtivo && gravando;

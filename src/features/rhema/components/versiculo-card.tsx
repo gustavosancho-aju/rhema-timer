@@ -1,6 +1,6 @@
 "use client";
 
-import type { SugestaoVersiculo } from "@/lib/types";
+import type { SugestaoVersiculo } from "@/shared/types";
 
 type Props = {
   sugestao: SugestaoVersiculo;

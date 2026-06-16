@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateTimer } from "@/lib/timer/timers";
-import { broadcastRoomSync } from "@/lib/timer/ws-handler";
+import { updateTimer } from "@/features/timer/lib/timers";
+import { broadcastRoomSync } from "@/features/timer/lib/ws-handler";
 
 export const runtime = "nodejs";
 

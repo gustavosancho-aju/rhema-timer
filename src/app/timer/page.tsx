@@ -1,4 +1,4 @@
-import { listRooms } from "@/lib/timer/rooms";
+import { listRooms } from "@/features/timer/lib/rooms";
 import RoomsClient from "./rooms-client";
 
 export const dynamic = "force-dynamic";

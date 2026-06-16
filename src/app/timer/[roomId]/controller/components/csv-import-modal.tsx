@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { parseCsv, type ParsedCsvRow } from "@/lib/timer/csv-parser";
-import { formatTime } from "@/lib/timer/format-time";
+import { parseCsv, type ParsedCsvRow } from "@/features/timer/lib/csv-parser";
+import { formatTime } from "@/features/timer/lib/format-time";
 
 export default function CsvImportModal({
   roomId,

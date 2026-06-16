@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRoom, listRooms } from "@/lib/timer/rooms";
+import { createRoom, listRooms } from "@/features/timer/lib/rooms";
 
 export const runtime = "nodejs";
 

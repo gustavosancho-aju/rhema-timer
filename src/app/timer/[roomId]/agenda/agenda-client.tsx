@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
-import { useWsTimer } from "@/hooks/timer/use-ws-timer";
-import { useTimerTick } from "@/hooks/timer/use-timer";
-import { useTimerStore } from "@/store/timer-store";
-import { formatTime } from "@/lib/timer/format-time";
-import { COLOR_MAP, type TimerColor } from "@/lib/timer/colors";
-import { RoleTopBar } from "@/components/command-center/role-top-bar";
-import { Badge, Ico } from "@/components/rhema/primitives";
+import { useWsTimer } from "@/features/timer/hooks/use-ws-timer";
+import { useTimerTick } from "@/features/timer/hooks/use-timer";
+import { useTimerStore } from "@/features/timer/store/timer-store";
+import { formatTime } from "@/features/timer/lib/format-time";
+import { COLOR_MAP, type TimerColor } from "@/features/timer/lib/colors";
+import { RoleTopBar } from "@/features/rhema/components/command-center/role-top-bar";
+import { Badge, Ico } from "@/shared/components/ui/primitives";
 
 export default function AgendaClient({
   roomId,

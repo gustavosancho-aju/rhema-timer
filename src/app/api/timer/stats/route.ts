@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { listRooms } from "@/lib/timer/rooms";
-import { listTimers } from "@/lib/timer/timers";
+import { listRooms } from "@/features/timer/lib/rooms";
+import { listTimers } from "@/features/timer/lib/timers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

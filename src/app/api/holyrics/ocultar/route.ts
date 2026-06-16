@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ocultarTexto, type HolyricsConfig } from "@/lib/holyrics-client";
+import { ocultarTexto, type HolyricsConfig } from "@/features/rhema/lib/holyrics-client";
 
 export const runtime = "nodejs";
 export const maxDuration = 10;

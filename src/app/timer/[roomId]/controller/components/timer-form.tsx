@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTimerStore, type TimerState } from "@/store/timer-store";
-import { parseTime, formatTime } from "@/lib/timer/format-time";
-import { COLOR_LIST, COLOR_MAP } from "@/lib/timer/colors";
+import { useTimerStore, type TimerState } from "@/features/timer/store/timer-store";
+import { parseTime, formatTime } from "@/features/timer/lib/format-time";
+import { COLOR_LIST, COLOR_MAP } from "@/features/timer/lib/colors";
 
 export default function TimerForm({
   roomId,

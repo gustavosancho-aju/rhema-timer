@@ -10,7 +10,7 @@ import {
   Pulse,
   Serif,
   Waveform,
-} from "@/components/rhema/primitives";
+} from "@/shared/components/ui/primitives";
 
 function formatElapsed(ms: number): string {
   const total = Math.floor(ms / 1000);
