@@ -9,14 +9,6 @@ import {
   type CultoTipo,
 } from "@/features/rhema/lib/gravacoes-types";
 
-type AgentStepStatus = "done" | "active" | "pending";
-
-interface AgentStep {
-  label: string;
-  status: AgentStepStatus;
-  detail: string;
-}
-
 const DIRECTION_STYLES: Record<
   Legenda["direcionamento"],
   { color: string; icon: "heart" | "brain"; label: string }
@@ -57,8 +49,6 @@ export function RightAgent({
   salvo: boolean;
   salvando: boolean;
 }) {
-  const steps: AgentStep[] = buildSteps({ gerando, legendas, transcricaoLen, palavras });
-
   return (
     <div className="flex flex-col gap-3.5" style={{ minHeight: 0 }}>
       <div
@@ -112,10 +102,13 @@ export function RightAgent({
           </div>
         </div>
 
-        <div className="flex flex-col gap-2" style={{ marginTop: 14 }}>
-          {steps.map((s, i) => (
-            <AgentStepRow key={i} {...s} />
-          ))}
+        <div style={{ marginTop: 12 }}>
+          <AgentStatusLine
+            gerando={gerando}
+            legendas={legendas}
+            palavras={palavras}
+            transcricaoLen={transcricaoLen}
+          />
         </div>
 
         <button
@@ -233,116 +226,78 @@ export function RightAgent({
   );
 }
 
-function buildSteps({
+function AgentStatusLine({
   gerando,
   legendas,
-  transcricaoLen,
   palavras,
+  transcricaoLen,
 }: {
   gerando: boolean;
   legendas: Legenda[] | null;
-  transcricaoLen: number;
   palavras: number;
-}): AgentStep[] {
-  const hasText = transcricaoLen >= 40;
-
-  if (!gerando && !legendas) {
-    return [
-      {
-        label: hasText ? "Transcrição pronta para análise" : "Aguardando transcrição",
-        status: hasText ? "done" : "pending",
-        detail: `${palavras.toLocaleString("pt-BR")} palavras · ${transcricaoLen} caracteres`,
-      },
-      {
-        label: "Identificar temas centrais",
-        status: "pending",
-        detail: "após primeira leitura",
-      },
-      {
-        label: "Cruzar com linguagem da casa",
-        status: "pending",
-        detail: "referências internas",
-      },
-      {
-        label: "Gerar direcionamentos",
-        status: "pending",
-        detail: "emotiva · reflexiva · bíblica",
-      },
-    ];
-  }
-
-  if (gerando) {
-    return [
-      { label: "Lendo a transcrição", status: "done", detail: `${palavras.toLocaleString("pt-BR")} palavras` },
-      { label: "Identificando temas centrais", status: "done", detail: "análise semântica" },
-      { label: "Cruzando com linguagem da casa", status: "active", detail: "tom e voz do ministério" },
-      { label: "Gerando direcionamentos", status: "pending", detail: "emotiva · reflexiva" },
-    ];
-  }
-
+  transcricaoLen: number;
+}) {
   const n = legendas?.length ?? 0;
-  return [
-    { label: "Lendo a transcrição", status: "done", detail: `${palavras.toLocaleString("pt-BR")} palavras` },
-    { label: "Identificando temas centrais", status: "done", detail: "temas extraídos" },
-    { label: "Cruzando com linguagem da casa", status: "done", detail: "alinhamento concluído" },
-    {
-      label: "Direcionamentos gerados",
-      status: "done",
-      detail: `${n} opção${n === 1 ? "" : "es"} · pronto para revisar`,
-    },
-  ];
-}
+  const pronto = transcricaoLen >= 40;
+  const dotBase = {
+    width: 16,
+    height: 16,
+    borderRadius: "50%",
+    flexShrink: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  } as const;
 
-function AgentStepRow({ label, status, detail }: AgentStep) {
-  const isDone = status === "done";
-  const isActive = status === "active";
   return (
-    <div className="flex items-start gap-2.5">
-      <span
-        style={{
-          width: 16,
-          height: 16,
-          borderRadius: "50%",
-          marginTop: 2,
-          flexShrink: 0,
-          background: isDone ? "rgba(176,240,240,0.1)" : "transparent",
-          border: isDone
-            ? "1px solid rgba(176,240,240,0.4)"
-            : isActive
-              ? "1px solid var(--luxo-glow)"
-              : "1px solid var(--border-default)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "var(--luxo-glow)",
-          animation: isActive ? "rh-breathe 2s infinite" : "none",
-          boxShadow: isActive ? "0 0 8px rgba(176,240,240,0.5)" : "none",
-        }}
-      >
-        {isDone && <Ico.check />}
-      </span>
-      <div className="flex-1">
-        <div
-          style={{
-            fontSize: 13,
-            color: isActive ? "var(--fg-1)" : isDone ? "var(--fg-2)" : "var(--fg-3)",
-            fontWeight: isActive ? 500 : 400,
-          }}
-        >
-          {label}
-          {isActive && <TypingDots />}
-        </div>
-        <div
-          style={{
-            fontSize: 11,
-            color: "var(--fg-3)",
-            marginTop: 2,
-            fontFamily: "var(--font-mono)",
-          }}
-        >
-          {detail}
-        </div>
-      </div>
+    <div className="flex items-center gap-2.5" style={{ fontSize: 13 }}>
+      {gerando ? (
+        <>
+          <span
+            style={{
+              ...dotBase,
+              border: "1px solid var(--luxo-glow)",
+              boxShadow: "0 0 8px rgba(176,240,240,0.5)",
+              animation: "rh-breathe 2s infinite",
+            }}
+          />
+          <span style={{ color: "var(--fg-1)" }}>
+            Lendo a palavra e criando direcionamentos
+            <TypingDots />
+          </span>
+        </>
+      ) : n > 0 ? (
+        <>
+          <span
+            style={{
+              ...dotBase,
+              background: "rgba(176,240,240,0.1)",
+              border: "1px solid rgba(176,240,240,0.4)",
+              color: "var(--luxo-glow)",
+            }}
+          >
+            <Ico.check />
+          </span>
+          <span style={{ color: "var(--fg-2)" }}>
+            {n} direcionamento{n === 1 ? "" : "s"} gerado{n === 1 ? "" : "s"} ·
+            pronto para revisar
+          </span>
+        </>
+      ) : (
+        <>
+          <span
+            style={{
+              ...dotBase,
+              border: `1px solid ${pronto ? "var(--luxo-glow)" : "var(--border-default)"}`,
+            }}
+          />
+          <span style={{ color: "var(--fg-3)" }}>
+            {pronto
+              ? `Pronto para gerar · ${palavras.toLocaleString("pt-BR")} palavras`
+              : "Aguardando a transcrição da palavra…"}
+          </span>
+        </>
+      )}
     </div>
   );
 }
@@ -424,127 +379,35 @@ function CaptionCard({
         }}
       />
 
-      <div
-        className="flex items-center justify-between"
-        style={{ marginBottom: 10 }}
-      >
-        <div className="flex items-center gap-2">
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 22,
-              height: 22,
-              borderRadius: 6,
-              background: `${style.color}22`,
-              color: style.color,
-            }}
-          >
-            <IconEl />
-          </span>
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: style.color,
-              textTransform: "uppercase",
-              letterSpacing: "0.18em",
-            }}
-          >
-            {style.label}
-          </span>
-          <Badge variant="neutral" style={{ height: 20, fontSize: 10 }}>
-            opção {index + 1}
-          </Badge>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setAberto(true)}
-            title="Ler a legenda completa"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              height: 28,
-              padding: "0 12px",
-              borderRadius: 9999,
-              background: "transparent",
-              border: "1px solid var(--border-subtle)",
-              color: "var(--fg-2)",
-              fontSize: 11,
-              fontWeight: 500,
-              cursor: "pointer",
-              fontFamily: "var(--font-sans)",
-              transition: "all 240ms",
-            }}
-          >
-            ler
-          </button>
-          <button
-            type="button"
-            onClick={onEscolher}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              height: 28,
-              padding: "0 12px",
-              borderRadius: 9999,
-              background: escolhida ? "var(--luxo-aqua)" : "transparent",
-              border: escolhida
-                ? "1px solid var(--luxo-aqua)"
-                : "1px solid var(--border-subtle)",
-              color: escolhida ? "var(--luxo-void)" : "var(--fg-2)",
-              fontSize: 11,
-              fontWeight: escolhida ? 700 : 500,
-              cursor: "pointer",
-              fontFamily: "var(--font-sans)",
-              transition: "all 240ms",
-            }}
-          >
-            {escolhida ? (
-              <>
-                <Ico.check /> escolhida
-              </>
-            ) : (
-              "escolher esta"
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={copy}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              height: 28,
-              padding: "0 10px",
-              borderRadius: 9999,
-              background: copied ? "rgba(176,240,240,0.15)" : "transparent",
-              border: copied
-                ? "1px solid rgba(176,240,240,0.35)"
-                : "1px solid var(--border-subtle)",
-              color: copied ? "var(--luxo-glow)" : "var(--fg-2)",
-              fontSize: 11,
-              fontWeight: 500,
-              cursor: "pointer",
-              fontFamily: "var(--font-sans)",
-              transition: "all 240ms",
-            }}
-          >
-            {copied ? (
-              <>
-                <Ico.check /> copiado
-              </>
-            ) : (
-              <>
-                <Ico.copy /> copiar
-              </>
-            )}
-          </button>
-        </div>
+      <div className="flex items-center gap-2" style={{ marginBottom: 10 }}>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 22,
+            height: 22,
+            borderRadius: 6,
+            background: `${style.color}22`,
+            color: style.color,
+          }}
+        >
+          <IconEl />
+        </span>
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: style.color,
+            textTransform: "uppercase",
+            letterSpacing: "0.18em",
+          }}
+        >
+          {style.label}
+        </span>
+        <Badge variant="neutral" style={{ height: 20, fontSize: 10 }}>
+          opção {index + 1}
+        </Badge>
       </div>
 
       <button
@@ -566,31 +429,110 @@ function CaptionCard({
           lineHeight: 1.6,
           color: "var(--fg-1)",
           whiteSpace: "pre-wrap",
-          marginBottom: 6,
+          marginBottom: 12,
           letterSpacing: "-0.005em",
           fontFamily: "var(--font-sans)",
         }}
       >
         {caption.texto}
       </button>
-      <button
-        type="button"
-        onClick={() => setAberto(true)}
-        style={{
-          alignSelf: "flex-start",
-          background: "transparent",
-          border: "none",
-          padding: 0,
-          marginBottom: 12,
-          color: "var(--luxo-aqua)",
-          fontSize: 11,
-          fontWeight: 600,
-          cursor: "pointer",
-          fontFamily: "var(--font-sans)",
-        }}
+
+      {/* Ações em linha própria — botões sempre completos */}
+      <div
+        className="flex flex-wrap items-center gap-2"
+        style={{ marginBottom: 12 }}
       >
-        ler completa →
-      </button>
+        <button
+          type="button"
+          onClick={() => setAberto(true)}
+          title="Ler a legenda completa"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            height: 32,
+            padding: "0 14px",
+            borderRadius: 9999,
+            background: "transparent",
+            border: "1px solid var(--border-subtle)",
+            color: "var(--fg-2)",
+            fontSize: 12,
+            fontWeight: 500,
+            cursor: "pointer",
+            fontFamily: "var(--font-sans)",
+            transition: "all 240ms",
+          }}
+        >
+          Ler
+        </button>
+        <button
+          type="button"
+          onClick={onEscolher}
+          style={{
+            flex: 1,
+            minWidth: 130,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            height: 32,
+            padding: "0 14px",
+            borderRadius: 9999,
+            background: escolhida ? "var(--luxo-aqua)" : "transparent",
+            border: escolhida
+              ? "1px solid var(--luxo-aqua)"
+              : "1px solid var(--border-default)",
+            color: escolhida ? "var(--luxo-void)" : "var(--fg-1)",
+            fontSize: 12,
+            fontWeight: escolhida ? 700 : 600,
+            cursor: "pointer",
+            fontFamily: "var(--font-sans)",
+            transition: "all 240ms",
+          }}
+        >
+          {escolhida ? (
+            <>
+              <Ico.check /> Escolhida
+            </>
+          ) : (
+            "Escolher esta"
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={copy}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            height: 32,
+            padding: "0 14px",
+            borderRadius: 9999,
+            background: copied ? "rgba(176,240,240,0.15)" : "transparent",
+            border: copied
+              ? "1px solid rgba(176,240,240,0.35)"
+              : "1px solid var(--border-subtle)",
+            color: copied ? "var(--luxo-glow)" : "var(--fg-2)",
+            fontSize: 12,
+            fontWeight: 500,
+            cursor: "pointer",
+            fontFamily: "var(--font-sans)",
+            transition: "all 240ms",
+          }}
+        >
+          {copied ? (
+            <>
+              <Ico.check /> Copiado
+            </>
+          ) : (
+            <>
+              <Ico.copy /> Copiar
+            </>
+          )}
+        </button>
+      </div>
 
       {caption.justificativa && (
         <div
