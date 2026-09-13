@@ -394,9 +394,23 @@ body {
   height: calc(100vh - 72px);
   min-height: 700px;
 }
-.rh-col-left   { grid-column: 1; min-height: 0; }
-.rh-col-center { grid-column: 2; min-height: 0; }
-.rh-col-right  { grid-column: 3; min-height: 0; }
+/* Cada coluna precisa ser um flex container que repassa a altura pro filho
+   único (o componente da coluna) — senão o filho só cresce pelo conteúdo e
+   as listas internas (histórico, transcrição, legendas) perdem o scroll
+   interno e "engolem" a página inteira (bug encontrado em produção
+   2026-09-13: botão de recolher histórico ficava inalcançável). */
+.rh-col-left, .rh-col-center, .rh-col-right {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.rh-col-left   { grid-column: 1; }
+.rh-col-center { grid-column: 2; }
+.rh-col-right  { grid-column: 3; }
+.rh-col-left > *, .rh-col-center > *, .rh-col-right > * {
+  flex: 1;
+  min-height: 0;
+}
 
 @media (max-width: 1100px) {
   .rh-grid { grid-template-columns: 220px 1fr 360px; padding: 16px 20px 20px; }
