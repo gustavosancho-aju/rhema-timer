@@ -7,9 +7,10 @@ import { getLegendasEscolhidas } from "@/features/rhema/lib/gravacoes";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-// Sonnet 4.6: boa qualidade editorial com custo menor que Opus. A geração de
-// legendas roda poucas vezes por culto.
-const MODEL = "claude-sonnet-4-6";
+// Opus 5: melhor qualidade editorial (líder em escrita criativa/tom). A
+// geração de legendas roda poucas vezes por culto, então o custo extra
+// frente ao Sonnet é irrelevante no volume desse uso.
+const MODEL = "claude-opus-5";
 
 type LegendaSaida = {
   texto: string;

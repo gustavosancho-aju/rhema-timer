@@ -59,5 +59,25 @@ export function useGravacoes() {
     [recarregar],
   );
 
-  return { historico, salvando, salvar, recarregar };
+  const excluir = useCallback(
+    async (id: string): Promise<boolean> => {
+      // Otimista: some da lista já no clique; se o servidor falhar, recarrega
+      // do zero para voltar ao estado real (mais simples que reinserir na posição certa).
+      setHistorico((h) => h.filter((g) => g.id !== id));
+      try {
+        const r = await fetch(`/api/gravacoes/${id}`, { method: "DELETE" });
+        if (!r.ok) {
+          await recarregar();
+          return false;
+        }
+        return true;
+      } catch {
+        await recarregar();
+        return false;
+      }
+    },
+    [recarregar],
+  );
+
+  return { historico, salvando, salvar, recarregar, excluir };
 }

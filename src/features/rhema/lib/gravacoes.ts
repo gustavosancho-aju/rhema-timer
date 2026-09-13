@@ -57,6 +57,15 @@ export async function setEscolhida(
   return row;
 }
 
+/** Remove uma gravação do histórico. Retorna true se algo foi apagado. */
+export async function deleteGravacao(id: string): Promise<boolean> {
+  const rows = await getDb()
+    .delete(gravacoes)
+    .where(eq(gravacoes.id, id))
+    .returning({ id: gravacoes.id });
+  return rows.length > 0;
+}
+
 /** Textos das legendas escolhidas mais recentes (acervo para few-shot). */
 export async function getLegendasEscolhidas(limit = 6): Promise<string[]> {
   const rows = await getDb()

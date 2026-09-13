@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Badge, Dot, Eyebrow, Serif } from "@/shared/components/ui/primitives";
 import { CULTO_LABELS } from "@/features/rhema/lib/gravacoes-types";
@@ -35,6 +36,7 @@ export function LeftRail({
   subtitulo,
   historico = [],
   onRestaurar,
+  onExcluir,
 }: {
   gravando: boolean;
   decorridoMs: number;
@@ -43,6 +45,7 @@ export function LeftRail({
   subtitulo?: { texto: string; autor?: string };
   historico?: GravacaoCliente[];
   onRestaurar?: (g: GravacaoCliente) => void;
+  onExcluir?: (g: GravacaoCliente) => void;
 }) {
   return (
     <div className="flex flex-col gap-4" style={{ minHeight: 0 }}>
@@ -119,7 +122,12 @@ export function LeftRail({
             </div>
           ) : (
             historico.map((g) => (
-              <GravacaoRow key={g.id} g={g} onRestaurar={onRestaurar} />
+              <GravacaoRow
+                key={g.id}
+                g={g}
+                onRestaurar={onRestaurar}
+                onExcluir={onExcluir}
+              />
             ))
           )}
         </div>
@@ -131,9 +139,11 @@ export function LeftRail({
 function GravacaoRow({
   g,
   onRestaurar,
+  onExcluir,
 }: {
   g: GravacaoCliente;
   onRestaurar?: (g: GravacaoCliente) => void;
+  onExcluir?: (g: GravacaoCliente) => void;
 }) {
   const escolhida =
     g.escolhidaIdx != null ? g.legendas[g.escolhidaIdx] : undefined;
@@ -144,9 +154,16 @@ function GravacaoRow({
   const cor = CULTO_COR[g.cultoTipo] ?? "var(--fg-3)";
 
   return (
-    <button
-      type="button"
+    <div
+      role={onRestaurar ? "button" : undefined}
+      tabIndex={onRestaurar ? 0 : undefined}
       onClick={() => onRestaurar?.(g)}
+      onKeyDown={(e) => {
+        if (onRestaurar && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          onRestaurar(g);
+        }
+      }}
       className="rh-history-row transition"
       style={{
         display: "block",
@@ -156,6 +173,7 @@ function GravacaoRow({
         borderTop: "1px solid var(--border-subtle)",
         background: "transparent",
         cursor: onRestaurar ? "pointer" : "default",
+        position: "relative",
       }}
     >
       <div className="flex items-center gap-2" style={{ marginBottom: 6 }}>
@@ -184,7 +202,7 @@ function GravacaoRow({
         {escolhida && (
           <span
             style={{
-              marginLeft: "auto",
+              marginLeft: onExcluir ? undefined : "auto",
               fontSize: 10,
               fontWeight: 600,
               color: "var(--luxo-glow)",
@@ -193,6 +211,7 @@ function GravacaoRow({
             ✓ escolhida
           </span>
         )}
+        {onExcluir && <ExcluirButton g={g} onExcluir={onExcluir} />}
       </div>
       <div
         style={{
@@ -222,6 +241,59 @@ function GravacaoRow({
           {g.legendas.length} legenda{g.legendas.length === 1 ? "" : "s"}
         </span>
       </div>
+    </div>
+  );
+}
+
+/** Botão de excluir com confirmação inline (2 cliques) em vez de window.confirm. */
+function ExcluirButton({
+  g,
+  onExcluir,
+}: {
+  g: GravacaoCliente;
+  onExcluir: (g: GravacaoCliente) => void;
+}) {
+  const [armado, setArmado] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  return (
+    <button
+      type="button"
+      aria-label={
+        armado ? "Confirmar exclusão da gravação" : "Excluir gravação do histórico"
+      }
+      title={armado ? "Clique de novo para confirmar" : "Excluir do histórico"}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (armado) {
+          if (timeoutRef.current) clearTimeout(timeoutRef.current);
+          onExcluir(g);
+          return;
+        }
+        setArmado(true);
+        timeoutRef.current = setTimeout(() => setArmado(false), 3000);
+      }}
+      style={{
+        marginLeft: "auto",
+        fontSize: armado ? 10 : 12,
+        fontWeight: armado ? 700 : 400,
+        color: armado ? "#F87171" : "var(--fg-4)",
+        background: armado ? "rgba(248,113,113,0.12)" : "transparent",
+        border: armado ? "1px solid rgba(248,113,113,0.4)" : "none",
+        borderRadius: 9999,
+        cursor: "pointer",
+        padding: armado ? "2px 8px" : "2px 4px",
+        lineHeight: 1,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {armado ? "confirmar ✕" : "✕"}
     </button>
   );
 }

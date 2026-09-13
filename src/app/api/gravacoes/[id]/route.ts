@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { setEscolhida } from "@/features/rhema/lib/gravacoes";
+import { deleteGravacao, setEscolhida } from "@/features/rhema/lib/gravacoes";
 
 export const runtime = "nodejs";
 
@@ -29,6 +29,24 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       );
     }
     return NextResponse.json({ gravacao });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ erro: msg }, { status: 500 });
+  }
+}
+
+// DELETE /api/gravacoes/[id] — remove a gravação do histórico.
+export async function DELETE(_req: NextRequest, ctx: Ctx) {
+  try {
+    const { id } = await ctx.params;
+    const apagou = await deleteGravacao(id);
+    if (!apagou) {
+      return NextResponse.json(
+        { erro: "Gravação não encontrada." },
+        { status: 404 },
+      );
+    }
+    return NextResponse.json({ ok: true });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ erro: msg }, { status: 500 });

@@ -10,11 +10,9 @@ try {
   /* arquivo ausente — ok */
 }
 
-// Para migrações usamos o pooler de sessão (5432), não o de transação (6543),
-// que não suporta bem o DDL/prepared statements do drizzle-kit.
-const migrationUrl = (process.env.DATABASE_URL ?? "")
-  .replace(":6543", ":5432")
-  .replace("?pgbouncer=true", "");
+// Para migrações usamos o endpoint direto do Neon (sem "-pooler"), que
+// suporta melhor o DDL/prepared statements do drizzle-kit que o pooled.
+const migrationUrl = (process.env.DATABASE_URL ?? "").replace("-pooler.", ".");
 
 export default {
   schema: [

@@ -39,7 +39,7 @@ function extractKeywords(texto: string, limit = 5): string[] {
 
 export default function Home() {
   const rec = useRecorder();
-  const { historico, salvando, salvar } = useGravacoes();
+  const { historico, salvando, salvar, excluir } = useGravacoes();
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [cultoTipo, setCultoTipo] = useState<CultoTipo | "">("");
@@ -164,6 +164,7 @@ export default function Home() {
             }
             historico={historico}
             onRestaurar={restaurar}
+            onExcluir={(g) => void excluir(g.id)}
           />
 
           <CenterTranscript
