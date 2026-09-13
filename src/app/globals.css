@@ -378,6 +378,64 @@ body {
   width: 100%;
 }
 
+/* =====================================================
+   Command-center grid — responsivo (auditoria UX 2026-09-13)
+   Desktop: 3 colunas fixas com altura de viewport (scroll interno).
+   <1100px: colunas mais estreitas, ainda lado a lado.
+   <900px: empilha em coluna única e a página passa a rolar
+   normalmente; ordem prioriza Transcrição > Curador > Sessão/Histórico,
+   já que gerar/escolher/salvar a legenda é a tarefa mais urgente.
+   ===================================================== */
+.rh-grid {
+  display: grid;
+  grid-template-columns: 260px 1fr 420px;
+  gap: 1.25rem;
+  padding: 20px 28px 28px;
+  height: calc(100vh - 72px);
+  min-height: 700px;
+}
+.rh-col-left   { grid-column: 1; min-height: 0; }
+.rh-col-center { grid-column: 2; min-height: 0; }
+.rh-col-right  { grid-column: 3; min-height: 0; }
+
+@media (max-width: 1100px) {
+  .rh-grid { grid-template-columns: 220px 1fr 360px; padding: 16px 20px 20px; }
+}
+
+@media (max-width: 900px) {
+  .rh-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 0;
+    padding: 16px 16px 24px;
+  }
+  .rh-col-left   { grid-column: 1; order: 3; }
+  .rh-col-center { grid-column: 1; order: 1; min-height: 480px; }
+  .rh-col-right  { grid-column: 1; order: 2; min-height: 480px; }
+}
+
+/* Barra superior: em telas estreitas o mic-pill decorativo some e a nav
+   ganha scroll horizontal em vez de estourar/cortar itens. */
+@media (max-width: 760px) {
+  .rh-topbar-mic { display: none; }
+  .rh-topbar-nav { overflow-x: auto; flex-wrap: nowrap; }
+}
+
+/* Barra de transporte (play + relógio + áudio + engine/idioma): em telas
+   bem estreitas quebra em duas linhas em vez de cortar itens à direita. */
+@media (max-width: 560px) {
+  .rh-transport-bar { flex-wrap: wrap; gap: 12px; }
+}
+
+/* =====================================================
+   Foco de teclado — visível no tema escuro (auditoria UX 2026-09-13)
+   ===================================================== */
+:focus-visible {
+  outline: 2px solid var(--luxo-glow);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 /* Badge variants */
 .rh-badge {
   display: inline-flex;

@@ -53,6 +53,10 @@ function getSpeechRecognitionCtor(): SpeechRecognitionCtor | null {
 export interface UseRecorderReturn {
   suportado: boolean | null;
   gravando: boolean;
+  /** true enquanto o motor de fala caiu e está tentando reconectar sozinho
+   * (rede instável, aba trocou de foco etc.) — usado pela UI pra avisar em
+   * vez de deixar o "ao vivo" pulsando sem captar nada. */
+  reconectando: boolean;
   textoFinal: string;
   textoInterim: string;
   decorrido: number;
@@ -67,9 +71,13 @@ export interface UseRecorderReturn {
   setLegendas: (l: Legenda[] | null) => void;
 }
 
+/** Tentativas seguidas de reconexão antes de desistir e avisar o usuário. */
+const MAX_TENTATIVAS_RECONEXAO = 4;
+
 export function useRecorder(): UseRecorderReturn {
   const [suportado, setSuportado] = useState<boolean | null>(null);
   const [gravando, setGravando] = useState(false);
+  const [reconectando, setReconectando] = useState(false);
   const [textoFinal, setTextoFinal] = useState("");
   const [textoInterim, setTextoInterim] = useState("");
   const [inicio, setInicio] = useState<number | null>(null);
@@ -80,6 +88,7 @@ export function useRecorder(): UseRecorderReturn {
 
   const recRef = useRef<SpeechRecognitionLike | null>(null);
   const gravandoRef = useRef(false);
+  const tentativasRef = useRef(0);
 
   useEffect(() => {
     queueMicrotask(() => setSuportado(!!getSpeechRecognitionCtor()));
@@ -103,12 +112,18 @@ export function useRecorder(): UseRecorderReturn {
     }
     setErro(null);
     setLegendas(null);
+    setReconectando(false);
+    tentativasRef.current = 0;
     const rec = new Ctor();
     rec.lang = "pt-BR";
     rec.continuous = true;
     rec.interimResults = true;
 
     rec.onresult = (e) => {
+      // Voltou a captar fala — a reconexão (se estava em curso) deu certo.
+      tentativasRef.current = 0;
+      setReconectando(false);
+
       let interim = "";
       let finalAdd = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -146,20 +161,37 @@ export function useRecorder(): UseRecorderReturn {
       setErro(friendly[e.error] ?? `Erro na transcrição: ${e.error}`);
     };
 
+    // Desiste de vez: marca a gravação como parada de verdade e avisa alto —
+    // nunca fica com "ao vivo" pulsando sem captar nada (auditoria UX
+    // 2026-09-13: essa era a falha mais grave do app).
+    function desistirDaReconexao() {
+      gravandoRef.current = false;
+      setGravando(false);
+      setReconectando(false);
+      setErro(
+        "A transcrição caiu e não consegui reconectar sozinho. Clique em ▶ para tentar de novo.",
+      );
+    }
+
     rec.onend = () => {
       // Auto-restart enquanto o usuário ainda quer gravar
       if (recRef.current && gravandoRef.current) {
+        tentativasRef.current += 1;
+        if (tentativasRef.current > MAX_TENTATIVAS_RECONEXAO) {
+          desistirDaReconexao();
+          return;
+        }
+        setReconectando(true);
         try {
           recRef.current.start();
         } catch {
           // start() pode falhar logo após erro — tentar de novo após um tick
           setTimeout(() => {
-            if (recRef.current && gravandoRef.current) {
-              try {
-                recRef.current.start();
-              } catch {
-                /* desistir silenciosamente */
-              }
+            if (!recRef.current || !gravandoRef.current) return;
+            try {
+              recRef.current.start();
+            } catch {
+              desistirDaReconexao();
             }
           }, 250);
         }
@@ -176,6 +208,7 @@ export function useRecorder(): UseRecorderReturn {
 
   const parar = useCallback(() => {
     gravandoRef.current = false;
+    tentativasRef.current = 0;
     if (recRef.current) {
       try {
         recRef.current.stop();
@@ -184,6 +217,7 @@ export function useRecorder(): UseRecorderReturn {
       }
     }
     setGravando(false);
+    setReconectando(false);
   }, []);
 
   const gerarLegendas = useCallback(async () => {
@@ -230,6 +264,7 @@ export function useRecorder(): UseRecorderReturn {
   return {
     suportado,
     gravando,
+    reconectando,
     textoFinal,
     textoInterim,
     decorrido,

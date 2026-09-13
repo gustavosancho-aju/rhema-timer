@@ -1,13 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Pulse, Dot, Ico, IconBtn } from "@/shared/components/ui/primitives";
 
+// "Histórico" e "Referências" ainda não têm página própria — hoje o
+// histórico já vive na barra lateral esquerda. Em vez de linkar pra "/" e
+// fingir que é uma seção real (o que confundia quem clicava), ficam
+// desabilitadas com um selo "em breve" até existirem de fato
+// (auditoria UX 2026-09-13).
 const TABS = [
-  { key: "live", label: "Ao vivo", href: "/" },
-  { key: "history", label: "Histórico", href: "/" },
-  { key: "refs", label: "Referências", href: "/" },
-  { key: "settings", label: "Ajustes", href: "/config/holyrics" },
+  { key: "live", label: "Ao vivo", href: "/", disabled: false },
+  { key: "history", label: "Histórico", href: "/", disabled: true },
+  { key: "refs", label: "Referências", href: "/", disabled: true },
+  { key: "settings", label: "Ajustes", href: "/config/holyrics", disabled: false },
 ] as const;
 
 export function TopBar({
@@ -17,6 +23,7 @@ export function TopBar({
   active?: "live" | "history" | "refs" | "settings";
   extraLinks?: { label: string; href: string }[];
 }) {
+  const router = useRouter();
   return (
     <header
       className="flex items-center justify-between"
@@ -34,9 +41,44 @@ export function TopBar({
       <div className="flex items-center gap-7">
         <Logo />
         <div style={{ width: 1, height: 22, background: "var(--border-subtle)" }} />
-        <nav className="flex gap-1">
+        <nav className="rh-topbar-nav flex gap-1">
           {TABS.map((item) => {
             const isActive = item.key === active;
+            if (item.disabled) {
+              return (
+                <span
+                  key={item.key}
+                  title="Em breve"
+                  className="inline-flex items-center gap-2"
+                  style={{
+                    height: 34,
+                    padding: "0 14px",
+                    borderRadius: 9999,
+                    color: "var(--fg-4)",
+                    border: "1px solid transparent",
+                    fontSize: 13,
+                    fontWeight: 500,
+                    cursor: "not-allowed",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {item.label}
+                  <span
+                    style={{
+                      fontSize: 9,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      color: "var(--fg-4)",
+                      border: "1px solid var(--border-subtle)",
+                      borderRadius: 9999,
+                      padding: "1px 6px",
+                    }}
+                  >
+                    em breve
+                  </span>
+                </span>
+              );
+            }
             return (
               <Link
                 key={item.key}
@@ -54,6 +96,7 @@ export function TopBar({
                   fontSize: 13,
                   fontWeight: 500,
                   textDecoration: "none",
+                  whiteSpace: "nowrap",
                 }}
               >
                 {isActive && <Pulse size={5} />}
@@ -86,7 +129,7 @@ export function TopBar({
 
       <div className="flex items-center gap-3">
         <div
-          className="flex items-center gap-2.5"
+          className="rh-topbar-mic flex items-center gap-2.5"
           style={{
             height: 34,
             padding: "0 14px",
@@ -110,7 +153,7 @@ export function TopBar({
             Web Speech API
           </span>
         </div>
-        <IconBtn title="Ajustes">
+        <IconBtn title="Ajustes" onClick={() => router.push("/config/holyrics")}>
           <Ico.settings />
         </IconBtn>
         <div

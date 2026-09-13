@@ -281,19 +281,21 @@ function ExcluirButton({
       }}
       style={{
         marginLeft: "auto",
-        fontSize: armado ? 10 : 12,
+        fontSize: armado ? 11 : 12,
         fontWeight: armado ? 700 : 400,
-        color: armado ? "#F87171" : "var(--fg-4)",
-        background: armado ? "rgba(248,113,113,0.12)" : "transparent",
-        border: armado ? "1px solid rgba(248,113,113,0.4)" : "none",
+        color: armado ? "#FCA5A5" : "var(--fg-4)",
+        background: armado ? "rgba(248,113,113,0.16)" : "transparent",
+        border: armado ? "1px solid #F87171" : "none",
+        boxShadow: armado ? "0 0 0 1px rgba(248,113,113,0.25)" : "none",
         borderRadius: 9999,
         cursor: "pointer",
-        padding: armado ? "2px 8px" : "2px 4px",
+        padding: armado ? "3px 10px" : "2px 4px",
         lineHeight: 1,
         whiteSpace: "nowrap",
+        animation: armado ? "rh-breathe 0.9s ease-in-out infinite" : "none",
       }}
     >
-      {armado ? "confirmar ✕" : "✕"}
+      {armado ? "clique p/ excluir de vez" : "✕"}
     </button>
   );
 }

@@ -45,6 +45,7 @@ function splitIntoLines(texto: string, startedAt: number | null): { t: string; t
 
 export function CenterTranscript({
   gravando,
+  reconectando = false,
   decorridoMs,
   textoFinal,
   textoInterim,
@@ -53,6 +54,7 @@ export function CenterTranscript({
   keywords = [],
 }: {
   gravando: boolean;
+  reconectando?: boolean;
   decorridoMs: number;
   textoFinal: string;
   textoInterim: string;
@@ -77,7 +79,7 @@ export function CenterTranscript({
     <div className="flex flex-col gap-4" style={{ minHeight: 0 }}>
       {/* transport bar */}
       <div
-        className="flex items-center justify-between"
+        className="rh-transport-bar flex items-center justify-between"
         style={{
           padding: "12px 20px",
           borderRadius: 16,
@@ -96,13 +98,17 @@ export function CenterTranscript({
               width: 44,
               height: 44,
               borderRadius: "50%",
-              background: gravando
-                ? "rgba(239, 68, 68, 0.15)"
-                : "rgba(176, 240, 240, 0.12)",
-              border: gravando
-                ? "1px solid rgba(239, 68, 68, 0.35)"
-                : "1px solid rgba(176, 240, 240, 0.35)",
-              color: gravando ? "#ff6b6b" : "var(--luxo-glow)",
+              background: reconectando
+                ? "rgba(245, 158, 11, 0.15)"
+                : gravando
+                  ? "rgba(239, 68, 68, 0.15)"
+                  : "rgba(176, 240, 240, 0.12)",
+              border: reconectando
+                ? "1px solid rgba(245, 158, 11, 0.4)"
+                : gravando
+                  ? "1px solid rgba(239, 68, 68, 0.35)"
+                  : "1px solid rgba(176, 240, 240, 0.35)",
+              color: reconectando ? "#fcd34d" : gravando ? "#ff6b6b" : "var(--luxo-glow)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -116,18 +122,26 @@ export function CenterTranscript({
             <div
               style={{
                 fontSize: 12,
-                color: "var(--fg-3)",
+                color: reconectando ? "#fcd34d" : "var(--fg-3)",
                 letterSpacing: "0.18em",
                 textTransform: "uppercase",
                 marginBottom: 2,
+                fontWeight: reconectando ? 700 : 400,
               }}
             >
-              {gravando ? "Gravando" : "Pronto"}
+              {reconectando ? "Reconectando…" : gravando ? "Gravando" : "Pronto"}
             </div>
             <div className="flex items-center gap-2.5">
-              {gravando && <Pulse size={7} color="#ff6b6b" />}
+              {gravando && <Pulse size={7} color={reconectando ? "#fcd34d" : "#ff6b6b"} />}
               <Elapsed value={formatElapsed(decorridoMs)} />
-              {gravando ? (
+              {reconectando ? (
+                <>
+                  <Dot size={3} color="var(--fg-4)" />
+                  <span style={{ fontSize: 12, color: "#fcd34d" }}>
+                    conexão instável · tentando de novo
+                  </span>
+                </>
+              ) : gravando ? (
                 <>
                   <Dot size={3} color="var(--fg-4)" />
                   <span style={{ fontSize: 12, color: "var(--fg-2)" }}>ao vivo · pt-BR</span>

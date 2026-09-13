@@ -143,56 +143,62 @@ export default function Home() {
       <div style={{ position: "relative", zIndex: 1 }}>
         <TopBar active="live" extraLinks={[{ label: "Timer", href: "/timer" }]} />
 
-        <div
-          className="grid gap-5"
-          style={{
-            gridTemplateColumns: "260px 1fr 420px",
-            padding: "20px 28px 28px",
-            height: "calc(100vh - 72px)",
-            minHeight: 700,
-          }}
-        >
-          <LeftRail
-            gravando={rec.gravando}
-            decorridoMs={rec.decorrido}
-            palavras={rec.palavras}
-            titulo={rec.gravando || transcricao ? "Sessão atual" : "Nenhuma sessão ativa"}
-            subtitulo={
-              rec.gravando || transcricao
-                ? { texto: "Palavra ao vivo", autor: "pt-BR · Web Speech" }
-                : undefined
-            }
-            historico={historico}
-            onRestaurar={restaurar}
-            onExcluir={(g) => void excluir(g.id)}
-          />
+        <div className="rh-grid">
+          <div className="rh-col-left">
+            <LeftRail
+              gravando={rec.gravando}
+              decorridoMs={rec.decorrido}
+              palavras={rec.palavras}
+              titulo={rec.gravando || transcricao ? "Sessão atual" : "Nenhuma sessão ativa"}
+              subtitulo={
+                rec.gravando || transcricao
+                  ? { texto: "Palavra ao vivo", autor: "pt-BR · Web Speech" }
+                  : undefined
+              }
+              historico={historico}
+              onRestaurar={restaurar}
+              onExcluir={(g) => void excluir(g.id)}
+            />
+          </div>
 
-          <CenterTranscript
-            gravando={rec.gravando}
-            decorridoMs={rec.decorrido}
-            textoFinal={rec.textoFinal}
-            textoInterim={rec.textoInterim}
-            startedAt={startedAt}
-            onToggle={handleToggle}
-            keywords={keywords}
-          />
+          <div className="rh-col-center">
+            <CenterTranscript
+              gravando={rec.gravando}
+              reconectando={rec.reconectando}
+              decorridoMs={rec.decorrido}
+              textoFinal={rec.textoFinal}
+              textoInterim={rec.textoInterim}
+              startedAt={startedAt}
+              onToggle={handleToggle}
+              keywords={keywords}
+            />
+          </div>
 
-          <RightAgent
-            legendas={rec.legendas}
-            gerando={rec.gerando}
-            onGerar={handleGerar}
-            disabled={rec.gravando || transcricao.length < 40}
-            transcricaoLen={transcricao.length}
-            palavras={rec.palavras}
-            geradoEm={rec.legendas ? generatedAt ?? undefined : undefined}
-            escolhidaIdx={escolhidaIdx}
-            onEscolher={setEscolhidaIdx}
-            cultoTipo={cultoTipo}
-            onCulto={setCultoTipo}
-            onSalvar={salvarNoHistorico}
-            salvo={salvo}
-            salvando={salvando}
-          />
+          <div className="rh-col-right">
+            <RightAgent
+              legendas={rec.legendas}
+              gerando={rec.gerando}
+              onGerar={handleGerar}
+              disabled={rec.gravando || transcricao.length < 40}
+              disabledReason={
+                rec.gravando
+                  ? "Pare a gravação para gerar as legendas."
+                  : transcricao.length < 40
+                    ? "Aguarde ter mais transcrição (mínimo ~40 caracteres)."
+                    : undefined
+              }
+              transcricaoLen={transcricao.length}
+              palavras={rec.palavras}
+              geradoEm={rec.legendas ? generatedAt ?? undefined : undefined}
+              escolhidaIdx={escolhidaIdx}
+              onEscolher={setEscolhidaIdx}
+              cultoTipo={cultoTipo}
+              onCulto={setCultoTipo}
+              onSalvar={salvarNoHistorico}
+              salvo={salvo}
+              salvando={salvando}
+            />
+          </div>
         </div>
 
         {rec.erro && (
@@ -244,11 +250,15 @@ export default function Home() {
           </div>
         )}
 
+        {(sozoPronto || familiaPronto) && (
         <div
           style={{ padding: "0 28px 36px", position: "relative" }}
           className="flex flex-col gap-6"
         >
-          {/* Post do domingo: combina a última escolhida do Sozo + do Culto da Família */}
+          {/* Post do domingo: combina a última escolhida do Sozo + do Culto da
+              Família. Só aparece quando pelo menos um dos dois já tem legenda
+              escolhida — fora disso a seção não é acionável e só ocupa espaço
+              (auditoria UX 2026-09-13). */}
           <section className="rh-card flex flex-col gap-3" style={{ padding: 20 }}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-col gap-1">
@@ -355,6 +365,7 @@ export default function Home() {
             )}
           </section>
         </div>
+        )}
       </div>
     </div>
   );

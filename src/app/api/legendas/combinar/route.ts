@@ -12,7 +12,9 @@ import { CULTO_LABELS } from "@/features/rhema/lib/gravacoes-types";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const MODEL = "claude-sonnet-4-6";
+// Opus 5: mesma escolha do curador principal — roda só 1x por domingo, então
+// o custo extra é irrelevante e a qualidade editorial do texto final importa.
+const MODEL = "claude-opus-5";
 
 // POST /api/legendas/combinar
 // Junta a última legenda escolhida do Sozo + a do Culto da Família e sintetiza

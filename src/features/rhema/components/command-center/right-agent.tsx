@@ -23,6 +23,7 @@ export function RightAgent({
   gerando,
   onGerar,
   disabled,
+  disabledReason,
   transcricaoLen,
   palavras,
   geradoEm,
@@ -38,6 +39,9 @@ export function RightAgent({
   gerando: boolean;
   onGerar: () => void;
   disabled: boolean;
+  /** Por que o botão está desabilitado agora — vira title/legenda visível em
+   * vez de deixar o operador adivinhando (auditoria UX 2026-09-13). */
+  disabledReason?: string;
   transcricaoLen: number;
   palavras: number;
   geradoEm?: string;
@@ -90,14 +94,18 @@ export function RightAgent({
               Agente Curador
               {gerando ? (
                 <Badge variant="live">pensando</Badge>
+              ) : salvo ? (
+                <Badge variant="gold">salvo</Badge>
+              ) : escolhidaIdx != null ? (
+                <Badge variant="gold">escolhida · falta salvar</Badge>
               ) : legendas ? (
-                <Badge variant="gold">pronto</Badge>
+                <Badge variant="neutral">revisar e escolher</Badge>
               ) : (
                 <Badge variant="neutral">em espera</Badge>
               )}
             </div>
             <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 2 }}>
-              Claude Sonnet 4.6 · treinado na linguagem da casa
+              Claude Opus 5 · treinado na linguagem da casa
             </div>
           </div>
         </div>
@@ -115,6 +123,7 @@ export function RightAgent({
           type="button"
           onClick={onGerar}
           disabled={disabled || gerando}
+          title={!gerando && disabled ? disabledReason : undefined}
           className="rh-btn rh-btn-primary"
           style={{
             marginTop: 14,
@@ -126,6 +135,18 @@ export function RightAgent({
           <Ico.sparkle />
           {gerando ? "Gerando legendas…" : "Gerar legendas"}
         </button>
+        {!gerando && disabled && disabledReason && (
+          <div
+            style={{
+              marginTop: 8,
+              fontSize: 11,
+              color: "var(--fg-3)",
+              textAlign: "center",
+            }}
+          >
+            {disabledReason}
+          </div>
+        )}
       </div>
 
       <div
