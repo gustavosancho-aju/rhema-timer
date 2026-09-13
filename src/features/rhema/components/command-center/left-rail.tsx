@@ -95,44 +95,98 @@ export function LeftRail({
         </div>
       </Card>
 
-      <Card noPad style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-        <div className="flex items-center justify-between" style={{ padding: "14px 16px 10px" }}>
-          <Eyebrow>Últimas gravações</Eyebrow>
-          {historico.length > 0 && (
-            <span style={{ fontSize: 11, color: "var(--fg-3)" }}>
-              {historico.length}
-            </span>
-          )}
-        </div>
-        <div className="thin-scroll" style={{ overflowY: "auto", flex: 1 }}>
-          {historico.length === 0 ? (
-            <div
-              style={{
-                padding: "24px 16px",
-                fontSize: 12,
-                color: "var(--fg-4)",
-                borderTop: "1px solid var(--border-subtle)",
-                lineHeight: 1.6,
-              }}
-            >
-              Nenhuma gravação salva ainda.
-              <br />
-              Gere legendas, escolha a sua favorita, marque o culto e clique em{" "}
-              <strong style={{ color: "var(--fg-2)" }}>Salvar no histórico</strong>.
-            </div>
-          ) : (
-            historico.map((g) => (
-              <GravacaoRow
-                key={g.id}
-                g={g}
-                onRestaurar={onRestaurar}
-                onExcluir={onExcluir}
-              />
-            ))
-          )}
-        </div>
-      </Card>
+      <HistoricoCard historico={historico} onRestaurar={onRestaurar} onExcluir={onExcluir} />
     </div>
+  );
+}
+
+/** Quantas gravações mostrar por padrão — só o suficiente pra montar o Post
+ * do domingo (Sozo + Culto da Família), sem competir visualmente com ele.
+ * Expande pra ver o histórico completo com 1 clique. */
+const RESUMO_QTD = 2;
+
+function HistoricoCard({
+  historico,
+  onRestaurar,
+  onExcluir,
+}: {
+  historico: GravacaoCliente[];
+  onRestaurar?: (g: GravacaoCliente) => void;
+  onExcluir?: (g: GravacaoCliente) => void;
+}) {
+  const [expandido, setExpandido] = useState(false);
+  const temMais = historico.length > RESUMO_QTD;
+  const visiveis = expandido ? historico : historico.slice(0, RESUMO_QTD);
+
+  return (
+    <Card
+      noPad
+      style={
+        expandido
+          ? { flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }
+          : { display: "flex", flexDirection: "column" }
+      }
+    >
+      <div className="flex items-center justify-between" style={{ padding: "14px 16px 10px" }}>
+        <Eyebrow>Últimas gravações</Eyebrow>
+        {historico.length > 0 && (
+          <span style={{ fontSize: 11, color: "var(--fg-3)" }}>
+            {expandido ? historico.length : `${visiveis.length}/${historico.length}`}
+          </span>
+        )}
+      </div>
+      <div
+        className="thin-scroll"
+        style={expandido ? { overflowY: "auto", flex: 1 } : { overflowY: "visible" }}
+      >
+        {historico.length === 0 ? (
+          <div
+            style={{
+              padding: "24px 16px",
+              fontSize: 12,
+              color: "var(--fg-4)",
+              borderTop: "1px solid var(--border-subtle)",
+              lineHeight: 1.6,
+            }}
+          >
+            Nenhuma gravação salva ainda.
+            <br />
+            Gere legendas, escolha a sua favorita, marque o culto e clique em{" "}
+            <strong style={{ color: "var(--fg-2)" }}>Salvar no histórico</strong>.
+          </div>
+        ) : (
+          visiveis.map((g) => (
+            <GravacaoRow
+              key={g.id}
+              g={g}
+              onRestaurar={onRestaurar}
+              onExcluir={onExcluir}
+            />
+          ))
+        )}
+      </div>
+      {temMais && (
+        <button
+          type="button"
+          onClick={() => setExpandido((v) => !v)}
+          style={{
+            padding: "10px 16px",
+            fontSize: 11,
+            fontWeight: 600,
+            color: "var(--luxo-aqua)",
+            background: "transparent",
+            border: "none",
+            borderTop: "1px solid var(--border-subtle)",
+            cursor: "pointer",
+            textAlign: "center",
+          }}
+        >
+          {expandido
+            ? "Mostrar só as últimas 2"
+            : `Ver todas as ${historico.length} gravações`}
+        </button>
+      )}
+    </Card>
   );
 }
 
