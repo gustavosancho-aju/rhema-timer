@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   CURADOR_SYSTEM_PROMPT,
+  IGREJA,
   LIMITES_FORMATO,
   montarUserPrompt,
 } from "./curador";
@@ -14,6 +15,14 @@ describe("prompts: regras de formato do Instagram", () => {
     expect(prompt).toContain(`${LIMITES_FORMATO.ganchoMaxChars} caracteres`);
     expect(prompt).toContain(`${LIMITES_FORMATO.corpoMaxLinhas} linhas`);
     expect(prompt).toContain(`${LIMITES_FORMATO.totalMaxChars}`);
+  });
+
+  it.each([
+    ["curador", CURADOR_SYSTEM_PROMPT],
+    ["combinador", COMBINADOR_SYSTEM_PROMPT],
+  ])("%s fixa o nome e a hashtag da igreja", (_nome, prompt) => {
+    expect(prompt).toContain("Comunidade das Nações Aracaju");
+    expect(prompt).toContain(IGREJA.hashtag);
   });
 
   it("o curador não manda mais usar 'muitas quebras'", () => {
