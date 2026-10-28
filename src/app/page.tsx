@@ -12,6 +12,7 @@ import type {
   CultoTipo,
   GravacaoCliente,
 } from "@/features/rhema/lib/gravacoes-types";
+import type { SugestaoVersiculo } from "@/shared/types";
 
 const STOP_WORDS = new Set([
   "a","o","as","os","e","é","de","do","da","dos","das","em","um","uma","uns","umas",
@@ -51,6 +52,9 @@ export default function Home() {
   } | null>(null);
   const [gerandoPost, setGerandoPost] = useState(false);
   const [erroPost, setErroPost] = useState<string | null>(null);
+  const [versiculosDetectados, setVersiculosDetectados] = useState<
+    SugestaoVersiculo[]
+  >([]);
 
   const transcricao = useMemo(
     () => (rec.textoFinal + " " + rec.textoInterim).trim(),
@@ -71,7 +75,7 @@ export default function Home() {
   async function handleGerar() {
     setEscolhidaIdx(null);
     setSalvo(false);
-    await rec.gerarLegendas();
+    await rec.gerarLegendas({ versiculos: versiculosDetectados });
     const d = new Date();
     const pad = (n: number) => n.toString().padStart(2, "0");
     setGeneratedAt(`geradas ${pad(d.getHours())}:${pad(d.getMinutes())}`);
@@ -246,7 +250,11 @@ export default function Home() {
 
         {(rec.gravando || transcricao) && (
           <div style={{ padding: "0 28px 28px", position: "relative" }}>
-            <VersiculosSugeridos transcricao={transcricao} gravando={rec.gravando} />
+            <VersiculosSugeridos
+              transcricao={transcricao}
+              gravando={rec.gravando}
+              onSugestoes={setVersiculosDetectados}
+            />
           </div>
         )}
 

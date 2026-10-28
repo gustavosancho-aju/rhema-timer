@@ -3,7 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { COMBINADOR_SYSTEM_PROMPT } from "@/features/rhema/lib/prompts/combinador";
 import { montarBlocoFewShot } from "@/features/rhema/lib/prompts/few-shot";
 import {
-  getLegendasEscolhidas,
+  getExemplosFewShot,
   getUltimaEscolhida,
   textoEscolhido,
 } from "@/features/rhema/lib/gravacoes";
@@ -48,8 +48,8 @@ export async function POST() {
       );
     }
 
-    const exemplos = await getLegendasEscolhidas(6);
-    const systemPrompt = COMBINADOR_SYSTEM_PROMPT + montarBlocoFewShot(exemplos);
+    const { aprovadas } = await getExemplosFewShot(6);
+    const systemPrompt = COMBINADOR_SYSTEM_PROMPT + montarBlocoFewShot(aprovadas);
 
     const userPrompt = `Legenda escolhida do Sozo:\n"""\n${textoSozo}\n"""\n\nLegenda escolhida do Culto da Família:\n"""\n${textoFamilia}\n"""\n\nSintetize a legenda final do post. Responda apenas com o JSON.`;
 

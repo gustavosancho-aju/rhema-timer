@@ -9,6 +9,8 @@ import type { HolyricsConfigLocal, SugestaoVersiculo } from "@/shared/types";
 type Props = {
   transcricao: string;
   gravando: boolean;
+  /** Avisa o pai das sugestões atuais (usadas como contexto das legendas). */
+  onSugestoes?: (sugestoes: SugestaoVersiculo[]) => void;
 };
 
 const STORAGE_KEY_HOLYRICS = "rhema.holyrics.config";
@@ -31,7 +33,7 @@ function lerConfigHolyrics(): HolyricsConfigLocal | null {
   }
 }
 
-export function VersiculosSugeridos({ transcricao, gravando }: Props) {
+export function VersiculosSugeridos({ transcricao, gravando, onSugestoes }: Props) {
   const [detectorAtivo, setDetectorAtivo]     = useState(false);
   const [carregado, setCarregado]             = useState(false);
   const [holyricsConfigurado, setHolyricsConfigurado] = useState(false);
@@ -72,6 +74,10 @@ export function VersiculosSugeridos({ transcricao, gravando }: Props) {
 
   const { sugestoes, analisando, ultimoErro, atualizarStatus, descartar } =
     useDetectorVersiculos(transcricao, detectorRodando);
+
+  useEffect(() => {
+    onSugestoes?.(sugestoes);
+  }, [sugestoes, onSugestoes]);
 
   const exibirNoHolyrics = useCallback(
     async (s: SugestaoVersiculo) => {

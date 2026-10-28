@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { CURADOR_SYSTEM_PROMPT } from "@/features/rhema/lib/prompts/curador";
+import {
+  CURADOR_SYSTEM_PROMPT,
+  montarUserPrompt,
+} from "@/features/rhema/lib/prompts/curador";
+import {
+  NUCLEO_SYSTEM_PROMPT,
+  parseJsonObjeto,
+  sanitizarNucleo,
+  type NucleoPregacao,
+} from "@/features/rhema/lib/prompts/nucleo";
+import { sanitizarVersiculos } from "@/features/rhema/lib/prompts/versiculos-contexto";
 import { montarBlocoFewShot } from "@/features/rhema/lib/prompts/few-shot";
-import { getLegendasEscolhidas } from "@/features/rhema/lib/gravacoes";
+import { getExemplosFewShot } from "@/features/rhema/lib/gravacoes";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -11,6 +21,14 @@ export const maxDuration = 60;
 // geração de legendas roda poucas vezes por culto, então o custo extra
 // frente ao Sonnet é irrelevante no volume desse uso.
 const MODEL = "claude-opus-5";
+
+// Etapa 1 (núcleo da pregação): leitura de texto longo e ruidoso, 1x por
+// geração. Sonnet dá bom custo/qualidade e responde rápido.
+const MODEL_NUCLEO = "claude-sonnet-5-5";
+
+// Limite para a etapa de núcleo: se demorar, seguimos sem ela para não
+// estourar o maxDuration da rota (a etapa é um reforço, não requisito).
+const NUCLEO_TIMEOUT_MS = 20_000;
 
 type LegendaSaida = {
   texto: string;
@@ -23,9 +41,46 @@ type RespostaCurador = {
   erro?: string;
 };
 
+/** Destila a pregação em tema/ideia central/frases fortes. null = segue sem. */
+async function extrairNucleo(
+  client: Anthropic,
+  transcricao: string,
+): Promise<NucleoPregacao | null> {
+  try {
+    const message = await client.messages.create(
+      {
+        model: MODEL_NUCLEO,
+        max_tokens: 1200,
+        system: NUCLEO_SYSTEM_PROMPT,
+        messages: [
+          {
+            role: "user",
+            content: `Transcrição da pregação:\n\n"""\n${transcricao}\n"""\n\nExtraia o núcleo. Responda apenas com o JSON.`,
+          },
+        ],
+      },
+      { timeout: NUCLEO_TIMEOUT_MS, maxRetries: 0 },
+    );
+    const texto = message.content
+      .filter((b): b is Anthropic.TextBlock => b.type === "text")
+      .map((b) => b.text)
+      .join("");
+    return sanitizarNucleo(parseJsonObjeto(texto));
+  } catch (err) {
+    console.warn(
+      "[legendas] etapa de núcleo falhou, seguindo sem ela:",
+      err instanceof Error ? err.message : err,
+    );
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { transcricao } = (await req.json()) as { transcricao?: string };
+    const { transcricao, versiculos } = (await req.json()) as {
+      transcricao?: string;
+      versiculos?: unknown;
+    };
 
     if (!transcricao || transcricao.trim().length < 40) {
       return NextResponse.json(
@@ -42,13 +97,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const userPrompt = `Transcrição da palavra da pastora (pode conter ruído/erros da transcrição automática — interprete o sentido):\n\n"""\n${transcricao}\n"""\n\nGere as 2 legendas conforme instruído. Responda apenas com o JSON.`;
-
-    // Few-shot: o curador aprende com as legendas já escolhidas pelo líder.
-    const exemplos = await getLegendasEscolhidas(6);
-    const systemPrompt = CURADOR_SYSTEM_PROMPT + montarBlocoFewShot(exemplos);
-
     const client = new Anthropic({ apiKey });
+
+    // Núcleo da pregação e exemplos do líder são independentes: em paralelo.
+    const [nucleo, exemplos] = await Promise.all([
+      extrairNucleo(client, transcricao),
+      getExemplosFewShot(6),
+    ]);
+
+    const userPrompt = montarUserPrompt({
+      transcricao,
+      nucleo,
+      versiculos: sanitizarVersiculos(versiculos),
+    });
+
+    // Few-shot: o curador aprende com o que o líder escolheu (e contrasta com
+    // o que ele deixou de lado no mesmo par).
+    const systemPrompt =
+      CURADOR_SYSTEM_PROMPT +
+      montarBlocoFewShot(exemplos.aprovadas, exemplos.preteridas);
+
     const message = await client.messages.create({
       model: MODEL,
       max_tokens: 3072,

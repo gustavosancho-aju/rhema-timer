@@ -7,6 +7,10 @@ import {
   type NewGravacao,
 } from "./gravacoes-schema";
 import type { CultoTipo, LegendaJson } from "./gravacoes-types";
+import {
+  extrairExemplosFewShot,
+  type ExemplosFewShot,
+} from "./prompts/few-shot";
 
 // Re-export client-safe helpers para conveniência (rotas/server).
 export { CULTO_LABELS, CULTO_TIPOS, isCultoTipo } from "./gravacoes-types";
@@ -66,19 +70,15 @@ export async function deleteGravacao(id: string): Promise<boolean> {
   return rows.length > 0;
 }
 
-/** Textos das legendas escolhidas mais recentes (acervo para few-shot). */
-export async function getLegendasEscolhidas(limit = 6): Promise<string[]> {
+/** Legendas aprovadas e preteridas das gravações mais recentes (few-shot). */
+export async function getExemplosFewShot(limit = 6): Promise<ExemplosFewShot> {
   const rows = await getDb()
     .select()
     .from(gravacoes)
     .where(isNotNull(gravacoes.escolhidaIdx))
     .orderBy(desc(gravacoes.createdAt))
     .limit(limit);
-  return rows
-    .map((g) =>
-      g.escolhidaIdx != null ? g.legendas[g.escolhidaIdx]?.texto : null,
-    )
-    .filter((t): t is string => Boolean(t && t.trim()));
+  return extrairExemplosFewShot(rows);
 }
 
 /** Texto da legenda escolhida de uma gravação (ou undefined). */

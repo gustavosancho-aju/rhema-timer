@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import type { VersiculoContexto } from "@/features/rhema/lib/prompts/versiculos-contexto";
+
 export type Direcionamento = "emotiva" | "reflexiva" | "biblica";
+
+/** Dados extras que ajudam o curador (ex.: versículos já detectados). */
+export interface ContextoLegendas {
+  versiculos?: VersiculoContexto[];
+}
 
 export interface Legenda {
   texto: string;
@@ -66,7 +73,7 @@ export interface UseRecorderReturn {
   palavras: number;
   iniciar: () => void;
   parar: () => void;
-  gerarLegendas: () => Promise<void>;
+  gerarLegendas: (contexto?: ContextoLegendas) => Promise<void>;
   limpar: () => void;
   setLegendas: (l: Legenda[] | null) => void;
 }
@@ -220,7 +227,7 @@ export function useRecorder(): UseRecorderReturn {
     setReconectando(false);
   }, []);
 
-  const gerarLegendas = useCallback(async () => {
+  const gerarLegendas = useCallback(async (contexto?: ContextoLegendas) => {
     const conteudo = (textoFinal + " " + textoInterim).trim();
     if (conteudo.length < 40) {
       setErro("Transcrição muito curta pra gerar legendas.");
@@ -233,7 +240,10 @@ export function useRecorder(): UseRecorderReturn {
       const r = await fetch("/api/legendas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transcricao: conteudo }),
+        body: JSON.stringify({
+          transcricao: conteudo,
+          versiculos: contexto?.versiculos ?? [],
+        }),
       });
       const data = (await r.json()) as { legendas?: Legenda[]; erro?: string };
       if (!r.ok || data.erro) {
